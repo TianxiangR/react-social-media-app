@@ -7,7 +7,7 @@ import Topbar from '@/components/shared/Topbar';
 
 function RootLayout() {
   return (
-    <div className="w-full md:flex">
+    <div className="w-full md:flex md:pl-0 pl-[30rem] ">
       <Topbar />
       <LeftSidebar />
 
