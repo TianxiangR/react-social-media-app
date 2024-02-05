@@ -1,10 +1,11 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, {useEffect,useRef, useState} from 'react';
-import { useForm } from 'react-hook-form';
+import { set, useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { z } from 'zod';
 
 import DatePicker from '@/components/shared/DatePicker';
+import ProfileImageSelector from '@/components/shared/ProfileImageSelector';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -15,67 +16,83 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { signUpPart1Schema } from '@/validations';
+import { signUpPart1Schema, signUpPart2Schema, signUpPart3Schema, signUpSchema } from '@/validations';
 
 function SignUp() {
   const formContainerRef = useRef<HTMLDivElement>(null);
-  const [formSize, setFormSize] = useState<number>(0);
+  const [formIndex, setFormIndex] = useState(2);
+  const [formData,  setFormData] = useState<z.infer<typeof signUpSchema>>({
+    email: '',
+    username: '',
+    name: '',
+    password: '',
+    confirmPassword: '',
+    birthdate: new Date(),
+    profileImage: new File([''], 'filename'),
+  });
 
-  useEffect(() => {
-    if (formContainerRef.current) {
-      setFormSize(formContainerRef.current.clientWidth);
-    }
-  }, [formContainerRef]);
-
-  // 1. Define your form.
-  const form = useForm<z.infer<typeof signUpPart1Schema>>({
+  const form1 = useForm<z.infer<typeof signUpPart1Schema>>({
     resolver: zodResolver(signUpPart1Schema),
     defaultValues: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-      dateOfBirth: new Date(),
+      email: formData.email,
+      username: formData.username,
+      name: formData.name,
     },
   });
-   
-  // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof signUpPart1Schema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
-  }
+
+  const form2 = useForm<z.infer<typeof signUpPart2Schema>>({
+    resolver: zodResolver(signUpPart2Schema),
+    defaultValues: {
+      password: formData.password,
+      confirmPassword: formData.confirmPassword
+    },
+  });
+
+  const form3 = useForm<z.infer<typeof signUpPart3Schema>>({
+    resolver: zodResolver(signUpPart3Schema),
+    defaultValues: {
+      birthdate: formData.birthdate,
+    },
+  });
+
+  const handleNext = (value: z.infer<typeof signUpPart1Schema> | z.infer<typeof signUpPart2Schema>) => {
+    console.log(value);
+    setFormData({...formData, ...value});
+    setFormIndex((prev) => prev + 1);
+  };
+
+  const handleBack = () => {
+    setFormIndex((prev) => prev - 1);
+  };
+
+  const handleSubmit = (value: z.infer<typeof signUpPart3Schema>) => {
+    console.log(value);
+    const data = {...formData, ...value};
+    setFormData(data);
+    console.log(data);
+
+  };
+  
 
   return (
-    <div className="flex flex-col w-full ustify-center items-center pt-[50px] pb-[50px]">
+    <div className="flex flex-col w-full ustify-center items-center pt-[50px] pb-[50px] overflow-x-hidden">
       <img 
         src='/assets/icon.png' 
         alt="logo"
         className="rounded-lg"
         width={80}
       />
-      <h2 className="h3-bold pt-5">
+      <h2 className="h3-bold pt-6">
           Create your account
       </h2>
-      <div className="w-[300px] max-w-[300px] overflow-auto" ref={formContainerRef}>
-        <div className="w-[auto] flex">
-          <div className="min-w-[300px] w-[300px] pl-2 pr-2">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col w-full gap-5 pt-3'>
+
+      <div className="w-[300px] max-w-[300px] overflow-hidden" ref={formContainerRef}>
+        <div className="w-[auto] flex" style={{transition: 'all 0.3s ease', transform: `translateX(-${formIndex * 300}px)`}}>
+          <div className="min-w-[300px] w-[300px] p-2 flex flex-col">
+            <Form {...form1}>
+              <form onSubmit={form1.handleSubmit(handleNext)} className="flex flex-col gap-3">
                 <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="example@email.com" type="email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
+                  control={form1.control}
                   name="username"
                   render={({ field }) => (
                     <FormItem>
@@ -88,7 +105,7 @@ function SignUp() {
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={form1.control}
                   name="name"
                   render={({ field }) => (
                     <FormItem>
@@ -100,71 +117,119 @@ function SignUp() {
                     </FormItem>
                   )}
                 />
-                <div className='flex flex-col gap-3'>
-                  <Button type="button" variant="outline">Back</Button>
-                  <Button type="button" className="w-full">Continue</Button>
+                <FormField
+                  control={form1.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input type="email" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="flex flex-col w-full pt-6 gap-3">
+                  <Button type="submit">
+                    Next
+                  </Button>
                 </div>
-                {/* <Button type="submit" className="w-full">Sign up</Button> */}
               </form>
-
-
             </Form>
           </div>
-          <div className="min-w-[300px] pl-2 pr-2">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col w-full gap-5 pt-3'>
+          <div className="min-w-[300px] w-[300px] p-2 flex flex-col">
+            <Form {...form2}>
+              <form onSubmit={form2.handleSubmit(handleNext)} className="flex flex-col gap-3">
                 <FormField
-                  control={form.control}
+                  control={form2.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="password" {...field} />
+                        <Input type="text" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <FormField
-                  control={form.control}
+                  control={form2.control}
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Confirm Password</FormLabel>
                       <FormControl>
-                        <Input type="password" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />   
-                <div className='flex flex-col gap-3'>
-                  <Button type="button" variant="outline">Back</Button>
-                  <Button type="button" className="w-full">Continue</Button>
-                </div>
-              </form>
-            </Form>
-          </div>
-          <div className="min-w-[300px] pl-2 pr-2">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className='flex flex-col w-full gap-5 pt-3'>
-                <FormField
-                  control={form.control}
-                  name="dateOfBirth"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Date of Birth</FormLabel>
-                      <FormControl>
-                        <DatePicker className="w-full max-w-[300px]" start={new Date(1904, 0, 1)} onChange={field.onChange}/>
+                        <Input type="text" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <div className='flex flex-col gap-3'>
-                  <Button type="button" variant="outline">Back</Button>
-                  <Button type="button" className="w-full">Continue</Button>
+                <div className="flex flex-col w-full pt-6 gap-3">
+                  <Button
+                    type="button"
+                    onClick={() => handleBack()}
+                    variant="outline"
+                  >
+                    Back
+                  </Button>
+                  <Button type="submit">
+                    Next
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </div>
+          <div className="min-w-[300px] w-[300px] p-2 flex flex-col">
+            <Form {...form3}>
+              <form onSubmit={form3.handleSubmit(handleSubmit)} className="flex flex-col gap-3">
+                <FormField
+                  control={form3.control}
+                  name="birthdate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date of Birth</FormLabel>
+                      <FormControl>
+                        <DatePicker
+                          end={new Date()}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form3.control}
+                  name="profileImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Profile Image</FormLabel>
+                      <FormControl>
+                        <div className="flex justify-center items-center w-full">
+                          <ProfileImageSelector onChange={field.onChange} />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex flex-col w-full pt-6 gap-3">
+                  <Button
+                    type="button"
+                    onClick={() => handleBack()}
+                    variant="outline"
+                  >
+                    Back
+                  </Button>
+                  <Button
+                    type="submit"
+                  >
+                    Submit
+                  </Button>
                 </div>
               </form>
             </Form>

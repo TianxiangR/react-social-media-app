@@ -78,3 +78,13 @@
 .h3-bold {
   @apply text-[24px] font-bold leading-[140%] tracking-tighter;
 }
+
+@layer utilities {
+  .select-image-mask {
+    @apply absolute flex items-center justify-center opacity-0 hover:opacity-80 w-full h-full bg-black rounded-full;
+  }
+
+  .dialog {
+    @apply flex items-center justify-center;
+  }
+}
