@@ -3,48 +3,27 @@ import './globals.css';
 import React from 'react';
 import { Route,Routes } from 'react-router-dom';
 
-import AuthLayout from './_auth/AuthLayout';
-import SignInForm from './_auth/forms/SignInForm';
-import SignUpForm from './_auth/forms/SignUpForm';
-import { 
-  AllUsers, 
-  CreatePost, 
-  EditPost, 
-  Explore, 
-  Home, 
-  PostDetails, 
-  Profile, 
-  Saved, 
-  UpdateProfile 
-} from './_root/pages';
-import RootLayout from './_root/RootLayout';
-import { Toaster } from './components/ui/toaster';
+import Login from './pages/Login';
+import SignUp from './pages/SignUp';
 
 function App() {
   return (
-    <main className="flex h-screen">
+    <main className="flex h-screen w-screen">
       <Routes>
 
         {/* public routes */}
-        <Route element={<AuthLayout/>}>
-          <Route path="/sign-in" element={<SignInForm />} />
-          <Route path="/sign-up" element={<SignUpForm />} />
-        </Route>
+        <Route index element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
 
         {/* private routes */}
-        <Route element={<RootLayout/>}>
-          <Route index element={<Home />} />
-          <Route path="/explore" element={<Explore/>} />
-          <Route path="/saved" element={<Saved />} />
-          <Route path="/all-users" element={<AllUsers/>} />
-          <Route path="/create-post" element={<CreatePost />} />
-          <Route path="/update-post/:postId" element={<EditPost />} />
-          <Route path="/posts/:postId" element={<PostDetails />} />
-          <Route path="/profile/:userId/*" element={<Profile />} />
-          <Route path="/update-profile/:userId" element={<UpdateProfile />} />
-        </Route>x
+        <Route path='/home' element={<h1>Home</h1>} />
+        <Route path='/explore' element={<h1>Explore</h1>} />
+        <Route path='/notifications' element={<h1>Notifications</h1>} />
+        {/* <Route path='/messages' element={<h1>Messages</h1>} /> */}
+        <Route path='/bookmarks' element={<h1>Bookmarks</h1>} />
+        <Route path='/profile' element={<h1>Profile</h1>} />
+
       </Routes>
-      <Toaster />
     </main>
   );
 }
