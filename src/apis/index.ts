@@ -9,5 +9,7 @@ export async function createUser() {
       },
       body: JSON.stringify({ username: 'test', password: 'test' }),
     });
+  } catch (error) {
+    console.error(error);
   }
 }
