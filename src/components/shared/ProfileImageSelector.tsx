@@ -1,7 +1,11 @@
+import 'react-image-crop/dist/ReactCrop.css';
+import './ReactCrop.css';
+
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import EditIcon from '@mui/icons-material/Edit';
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect,useRef,useState} from 'react';
 import {FileWithPath, useDropzone} from 'react-dropzone';
+import ReactCrop, { centerCrop, convertToPixelCrop,type Crop, makeAspectCrop, type PercentCrop, type PixelCrop } from 'react-image-crop';
 
 import {
   Dialog,
@@ -11,26 +15,29 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import { setCanvasPreview } from '@/lib/utils';
 
 import { Button } from '../ui/button';
 import ImageCropper from './ImageCropper';
 
-export type SelectImageProps = {
-  onChange: (file: File) => void;
-  url? : string;
+export type ProfileImageSelectorProps = {
+  onChange?: (imageData: string) => void;
+  src? : string;
 }
-function ProfileImageSelector({onChange, url}: SelectImageProps) {
-  const [file, setFile] = useState<File | null>(null);
-  const [fileUrl, setFileUrl] = useState<string | null | undefined>(url);
+
+function ProfileImageSelector({onChange, src}: ProfileImageSelectorProps) {
+  const [imageData, setImageData] = useState<string | null | undefined>(src);
+  const [url, setUrl] = useState<string | null | undefined>(src);
   const [open, setOpen] = useState(false);
+  const [crop, setCrop] = useState<PercentCrop>();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
     const newFile = acceptedFiles[0];
-    setFile(newFile);
-    setFileUrl(URL.createObjectURL(newFile));
-    onChange(newFile);
+    setUrl(URL.createObjectURL(newFile));
     setOpen(true);
-  }, [file]);
+  }, [imageData]);
 
   const {getRootProps, getInputProps} = useDropzone({
     onDrop, 
@@ -38,18 +45,51 @@ function ProfileImageSelector({onChange, url}: SelectImageProps) {
       'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.svg']
     }});
 
+  
+  const handleOnChange = (data: string) => {
+    // setUrl(null);
+    setImageData(data);
+    onChange?.(data);
+  };
+
+  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    const {width, height} = e.currentTarget;
+    console.log(width, height);
+    const crop = makeAspectCrop(
+      {
+        unit: '%',
+        width: Math.min(width, height)
+      },
+      1,
+      width,
+      height
+    );
+
+    const centeredCrop = centerCrop(crop, width, height);
+    setCrop(centeredCrop);
+  };
+
+  const handleApply = () => {
+    if (!imageRef.current || !canvasRef.current || !crop) {
+      return;
+    }
+    setCanvasPreview(canvasRef.current, imageRef.current, convertToPixelCrop(crop, imageRef.current.naturalWidth, imageRef.current.naturalHeight ));
+    handleOnChange(canvasRef.current.toDataURL());
+    setOpen(false);
+  };
+
   return (
     <div>
       <div {...getRootProps()} className="hover:cursor-pointer">
         <input {...getInputProps()} />
-        {fileUrl ? (
+        {imageData ? (
           <div className="w-40 h-40 bg-gray-200 rounded-full flex justify-center items-center flex-col relative">
             <div className="select-image-mask">
               <div className="w-20 h-20 flex justify-center items-center opacity-80">
                 <EditIcon sx={{fontSize: '50px', color: 'white', opacity: 100}}/>
               </div>
             </div>
-            <img src={fileUrl} alt="profile" className="w-40 h-40 rounded-full object-cover" />
+            <img src={imageData} alt="profile" className="w-40 h-40 rounded-full object-cover" />
           </div>
         ) : (
           <div className="w-40 h-40 bg-gray-200 rounded-full flex justify-center items-center flex-col relative">
@@ -66,10 +106,21 @@ function ProfileImageSelector({onChange, url}: SelectImageProps) {
               Crop the image to fit the profile picture
             </DialogDescription>
           </DialogHeader>
-          <div className="p-2 w-full h-[500px] overflow-auto">
-            <ImageCropper src={fileUrl || ''} onCrop={(crop) => console.log(crop)} />
+          <div className="p-4">
+            <div className="w-full max-h-[500px] flex justify-center">
+              <ReactCrop
+                crop={crop}
+                aspect={1}
+                circularCrop
+                keepSelection
+                onChange={(_, crop) => {setCrop(crop); console.log(crop);}}
+              > 
+                <img src={url || ''} onLoad={handleImageLoad} className="object-contain" ref={imageRef}/>
+              </ReactCrop>
+              <canvas ref={canvasRef} style={{display: 'none', height: 100, width: 100}} />
+            </div>
           </div>
-          <Button onClick={() => setOpen(false)}>Apply</Button>
+          <Button onClick={handleApply}>Apply</Button>
         </DialogContent>
       </Dialog>
     </div>

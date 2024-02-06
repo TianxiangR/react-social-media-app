@@ -28,7 +28,7 @@ function SignUp() {
     password: '',
     confirmPassword: '',
     birthdate: new Date(),
-    profileImage: new File([''], 'filename'),
+    profileImage: '',
   });
 
   const form1 = useForm<z.infer<typeof signUpPart1Schema>>({
@@ -70,7 +70,6 @@ function SignUp() {
     const data = {...formData, ...value};
     setFormData(data);
     console.log(data);
-
   };
   
 

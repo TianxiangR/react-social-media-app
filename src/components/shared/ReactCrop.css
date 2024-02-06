@@ -1,0 +1,8 @@
+.ReactCrop {
+  max-height: inherit;
+}
+
+.ReactCrop__child-wrapper {
+  overflow: hidden;
+  max-height: inherit;
+}
