@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
+import { type PixelCrop } from 'react-image-crop';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -30,4 +31,27 @@ export function getYears(start: Date, end: Date): string[] {
     years.push(i.toString());
   }
   return years;
+}
+
+export function setCanvasPreview(canvas: HTMLCanvasElement, image: HTMLImageElement, crop: PixelCrop) {
+  console.log(crop);
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    
+    canvas.width = crop.width;
+    canvas.height = crop.height;
+
+    ctx.drawImage(
+      image,
+      crop.x,
+      crop.y,
+      crop.width,
+      crop.height,
+      0,
+      0,
+      crop.width,
+      crop.height,
+    );
+    ctx.restore();
+  }
 }

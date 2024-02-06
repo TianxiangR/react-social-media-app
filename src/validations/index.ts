@@ -12,7 +12,7 @@ export const signUpSchema = z.object({
   password: z.string().min(6),
   confirmPassword: z.string().min(6),
   birthdate: z.custom<Date>(),
-  profileImage: z.custom<File>()
+  profileImage: z.string(),
 });
 
 export const signUpPart1Schema = z.object({
@@ -28,5 +28,5 @@ export const signUpPart2Schema = z.object({
 
 export const signUpPart3Schema = z.object({
   birthdate: z.custom<Date>(),
-  profileImage: z.custom<File>()
+  profileImage: z.string()
 });
