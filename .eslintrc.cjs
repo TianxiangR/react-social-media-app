@@ -46,12 +46,12 @@ module.exports = {
       'error',
       'always'
     ],
-    '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/no-explicit-any': 'warn',
     'simple-import-sort/imports': 'error',
     'simple-import-sort/exports': 'error',
     'import/first': 'error',
     'import/no-duplicates': 'error',
     'import/newline-after-import': 'error',
+    '@typescript-eslint/no-unused-vars': 'warn',
   }
 };
