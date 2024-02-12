@@ -77,7 +77,7 @@ function SignUp() {
   };
   
   return (
-    <div className="flex flex-col w-full ustify-center items-center pt-[50px] pb-[50px] overflow-x-hidden">
+    <div className="flex flex-col w-full h-screen justify-center items-center pt-[50px] pb-[50px] overflow-x-hidden">
 
       {/* Logo */}
       <img 

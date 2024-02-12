@@ -46,7 +46,7 @@ function Login() {
   }
 
   return (
-    <div className="flex flex-col w-full h-full justify-center items-center">
+    <div className="flex flex-col w-full h-screen justify-center items-center">
       <Form {...form}>
         <img 
           src='/assets/icon.png' 
