@@ -12,7 +12,7 @@ import { getDaysInMonth, getMonths, getYears } from '@/lib/utils';
 
 import { FormLabel } from '../ui/form';
 
-export type DatePickerProps = React.HTMLAttributes<HTMLDivElement> & {
+export type DatePickerProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'> & {
   value?: Date;
   onChange?: (value: Date) => void;
   start?: Date;
@@ -40,7 +40,13 @@ function DatePicker({ value, onChange, start, end, className, ...props}: DatePic
     }
   }, [selectedMonth, selectedYear]);
 
+
+
   const formDate = () => new Date(Number(selectedYear), Number(selectedMonth) - 1, Number(selectedDay));
+
+  useEffect(() => {
+    onChange?.(formDate());
+  }, []);
 
   const handleMonthChange = (value: string) => {
     setSelectedMonth(value);

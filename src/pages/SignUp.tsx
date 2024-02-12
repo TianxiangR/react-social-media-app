@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import React, {useEffect,useRef, useState} from 'react';
 import { set, useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
+import { createUser, signInUser } from '@/apis';
 import DatePicker from '@/components/shared/DatePicker';
 import ProfileImageSelector from '@/components/shared/ProfileImageSelector';
 import { Button } from '@/components/ui/button';
@@ -16,9 +17,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { TOKEN_STORAGE_KEY } from '@/constants';
 import { signUpPart1Schema, signUpPart2Schema, signUpPart3Schema, signUpSchema } from '@/validations';
 
 function SignUp() {
+  const navigate = useNavigate();
   const formContainerRef = useRef<HTMLDivElement>(null);
   const [formIndex, setFormIndex] = useState(2);
   const [formData,  setFormData] = useState<z.infer<typeof signUpSchema>>({
@@ -26,9 +29,9 @@ function SignUp() {
     username: '',
     name: '',
     password: '',
-    confirmPassword: '',
-    birthdate: new Date(),
-    profileImage: '',
+    confirm_password: '',
+    date_of_birth: '',
+    profile_image: new File([], 'profile.png'),
   });
 
   const form1 = useForm<z.infer<typeof signUpPart1Schema>>({
@@ -44,14 +47,14 @@ function SignUp() {
     resolver: zodResolver(signUpPart2Schema),
     defaultValues: {
       password: formData.password,
-      confirmPassword: formData.confirmPassword
+      confirm_password: formData.confirm_password
     },
   });
 
   const form3 = useForm<z.infer<typeof signUpPart3Schema>>({
     resolver: zodResolver(signUpPart3Schema),
     defaultValues: {
-      birthdate: formData.birthdate,
+      date_of_birth: formData.date_of_birth,
     },
   });
 
@@ -65,28 +68,35 @@ function SignUp() {
     setFormIndex((prev) => prev - 1);
   };
 
-  const handleSubmit = (value: z.infer<typeof signUpPart3Schema>) => {
-    console.log(value);
+  const handleSubmit = async (value: z.infer<typeof signUpPart3Schema>) => {
     const data = {...formData, ...value};
     setFormData(data);
-    console.log(data);
+    const token = await createUser(data);
+    window.localStorage.setItem(TOKEN_STORAGE_KEY, token?.access || '');
+    navigate('/home');
   };
   
-
   return (
     <div className="flex flex-col w-full ustify-center items-center pt-[50px] pb-[50px] overflow-x-hidden">
+
+      {/* Logo */}
       <img 
         src='/assets/icon.png' 
         alt="logo"
         className="rounded-lg"
         width={80}
       />
+
+      {/* Title */}
       <h2 className="h3-bold pt-6">
           Create your account
       </h2>
 
+      {/* Form */}
       <div className="w-[300px] max-w-[300px] overflow-hidden" ref={formContainerRef}>
         <div className="w-[auto] flex" style={{transition: 'all 0.3s ease', transform: `translateX(-${formIndex * 300}px)`}}>
+
+          {/* Form1: Username, Name, Email */}
           <div className="min-w-[300px] w-[300px] p-2 flex flex-col">
             <Form {...form1}>
               <form onSubmit={form1.handleSubmit(handleNext)} className="flex flex-col gap-3">
@@ -137,6 +147,8 @@ function SignUp() {
               </form>
             </Form>
           </div>
+
+          {/* Form2: Password */}
           <div className="min-w-[300px] w-[300px] p-2 flex flex-col">
             <Form {...form2}>
               <form onSubmit={form2.handleSubmit(handleNext)} className="flex flex-col gap-3">
@@ -147,7 +159,7 @@ function SignUp() {
                     <FormItem>
                       <FormLabel>Password</FormLabel>
                       <FormControl>
-                        <Input type="text" {...field} />
+                        <Input type="password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -155,12 +167,12 @@ function SignUp() {
                 />
                 <FormField
                   control={form2.control}
-                  name="confirmPassword"
+                  name="confirm_password"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Confirm Password</FormLabel>
                       <FormControl>
-                        <Input type="text" {...field} />
+                        <Input type="password" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -181,19 +193,22 @@ function SignUp() {
               </form>
             </Form>
           </div>
-          <div className="min-w-[300px] w-[300px] p-2 flex flex-col">
+
+          {/* Form3: Date of Birth, Profile Image */}
+          <div className="min-w-[300px] w-[300px] p-2 flex flex-col">  
             <Form {...form3}>
               <form onSubmit={form3.handleSubmit(handleSubmit)} className="flex flex-col gap-3">
                 <FormField
                   control={form3.control}
-                  name="birthdate"
+                  name="date_of_birth"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Date of Birth</FormLabel>
                       <FormControl>
                         <DatePicker
+                          start={new Date(1900, 0, 1)}
                           end={new Date()}
-                          onChange={field.onChange}
+                          onChange={(date: Date) => {const value = date.toISOString().split('T')[0]; field.onChange(value); console.log(value); return value;}}
                         />
                       </FormControl>
                       <FormMessage />
@@ -202,7 +217,7 @@ function SignUp() {
                 />
                 <FormField
                   control={form3.control}
-                  name="profileImage"
+                  name="profile_image"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Profile Image</FormLabel>
@@ -215,7 +230,6 @@ function SignUp() {
                     </FormItem>
                   )}
                 />
-
                 <div className="flex flex-col w-full pt-6 gap-3">
                   <Button
                     type="button"
@@ -233,6 +247,7 @@ function SignUp() {
               </form>
             </Form>
           </div>
+
         </div>
       </div>
       <p className="pt-3">

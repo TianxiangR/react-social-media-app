@@ -55,3 +55,138 @@ export function setCanvasPreview(canvas: HTMLCanvasElement, image: HTMLImageElem
     ctx.restore();
   }
 }
+
+export function image64ToCanvasRef(canvas: HTMLCanvasElement, image64: string, pixelCrop: PixelCrop){
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+  const ctx = canvas.getContext('2d');
+  const image = new Image();
+  image.src = image64;
+  
+  ctx?.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
+  );
+}
+
+
+export function extractImageFileExtensionFromBase64(base64Data: string){
+  return base64Data.substring('data:image/'.length, base64Data.indexOf(';base64'));
+}
+
+export function base64StringtoFile(base64String: string, filename: string) {
+  const arr = base64String.split(',');
+  const mime = arr[0].match(/:(.*?);/)?.[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+
+  while(n--){
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+
+  return new File([u8arr], filename, {type:mime});
+}
+
+export function getFormDataFromObject(object: Record<string, string | Blob | Blob[]>){
+  const formData = new FormData();
+  for (const key in object){
+    if (Array.isArray(object[key])){
+      (object[key] as Blob[]).forEach((value) => {
+        formData.append(key, value);
+      });
+    }
+    else {
+      formData.append(key, object[key] as (string | Blob));
+    }
+  }
+  return formData;
+}
+
+export function getQueryStringFromObject(object: Record<string, any>){
+  const queryString = Object.keys(object).map(key => `${key}=${object[key]}`).join('&');
+  const urlSearchParams = new URLSearchParams(queryString);
+  return urlSearchParams.toString();
+} 
+
+
+export const runMicroTask = (function(){
+  if (typeof Promise === 'function'){
+    return function (callback: () => void){
+      Promise.resolve().then(callback);
+    };
+  }
+  if (typeof MutationObserver === 'function'){
+    return function (callback: () => void){
+      const observer = new MutationObserver(callback);
+      const textNode = document.createTextNode('microtask');
+      observer.observe(textNode, {characterData: true});
+      textNode.data = '';
+      textNode.remove();
+      return;
+    };
+  }
+  else {
+    return function (callback: () => void){
+      setTimeout(callback, 0);
+    };
+  }
+})();
+
+export function formatDateString(dateString: string) {
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  };
+
+  const date = new Date(dateString);
+  const formattedDate = date.toLocaleDateString('en-US', options);
+
+  const time = date.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+  return `${formattedDate} at ${time}`;
+}
+
+// 
+export const multiFormatDateString = (timestamp: string = ''): string => {
+  const timestampNum = Math.round(new Date(timestamp).getTime() / 1000);
+  const date: Date = new Date(timestampNum * 1000);
+  const now: Date = new Date();
+
+  const diff: number = now.getTime() - date.getTime();
+  const diffInSeconds: number = diff / 1000;
+  const diffInMinutes: number = diffInSeconds / 60;
+  const diffInHours: number = diffInMinutes / 60;
+  const diffInDays: number = diffInHours / 24;
+
+  switch (true) {
+  case Math.floor(diffInDays) >= 30:
+    return formatDateString(timestamp);
+  case Math.floor(diffInDays) === 1:
+    return `${Math.floor(diffInDays)} day ago`;
+  case Math.floor(diffInDays) > 1 && diffInDays < 30:
+    return `${Math.floor(diffInDays)} days ago`;
+  case Math.floor(diffInHours) >= 1:
+    return `${Math.floor(diffInHours)} hours ago`;
+  case Math.floor(diffInMinutes) >= 1:
+    return `${Math.floor(diffInMinutes)} minutes ago`;
+  default:
+    return 'Just now';
+  }
+};
+
+
+export function countNonWhiteSpaceCharacters(text: string) {
+  return text.replace(/\s/g, '').length;
+} 

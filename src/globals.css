@@ -85,6 +85,57 @@
   }
 
   .dialog {
-    @apply flex items-center justify-center;
+    @apply rounded-lg min-h-[55px];
+  }
+
+  .dialog::backdrop {
+    @apply bg-black opacity-50;
+  }
+
+  .profile-image {
+    @apply w-[40px] h-[40px] rounded-full;
+  }
+}
+
+@layer components {
+  .round-button {
+    @apply flex items-center justify-center rounded-full;
+  }
+
+  .input:empty:before {
+    content: attr(placeholder);
+    opacity: 0.6;
+  }
+
+  .icon-button * {
+    @apply text-[inherit];
+    font-size: inherit;
+  }
+  
+  .icon-button svg {
+    height: 1em;
+    width: 1em;
+    max-height: 1em;
+    max-width: 1em;
+    min-height: 1em;
+    min-width: 1em;
+  }
+
+  .icon-button > .icon-bg {
+    transform: translate(-50%, -50%);
+  }
+
+  .sticky-bar {
+    background-color: rgba(255, 255, 255, 0.85);
+    @apply sticky backdrop-blur-lg;
+  }
+
+  .text-box {
+    --max-lines: 10;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--max-lines);
+    white-space: pre-wrap;
   }
 }

@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
+import { signInUser } from '@/apis';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -14,9 +15,11 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { TOKEN_STORAGE_KEY } from '@/constants';
 import { signInSchema } from '@/validations';
 
 function Login() {
+  const navigate = useNavigate();
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof signInSchema>>({
@@ -28,10 +31,18 @@ function Login() {
   });
    
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof signInSchema>) {
+  async function onSubmit(values: z.infer<typeof signInSchema>) {
     // Do something with the form values.
     // ✅ This will be type-safe and validated.
     console.log(values);
+    const token = await signInUser(values.email, values.password);
+
+    if (token === undefined) {
+      return;
+    }
+
+    window.localStorage.setItem(TOKEN_STORAGE_KEY, token?.access || '');
+    navigate('/home');
   }
 
   return (
