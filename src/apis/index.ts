@@ -5,6 +5,8 @@ import { IPost, IPostPreview, NewPost, NewUser, TokenResponse, User } from '@/ty
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
+console.log(baseUrl);
+
 export async function createUser(user: NewUser): Promise<TokenResponse | undefined> {
 
   const formData = getFormDataFromObject(user);
