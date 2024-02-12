@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 
 export type TextAreaProps = React.ComponentPropsWithRef<'textarea'>;
 
-const TextArea: React.FC<TextAreaProps> = React.forwardRef<HTMLTextAreaElement>(({className, onChange, ...props}, ref) => {
+const TextArea: React.FC<TextAreaProps> = React.forwardRef<HTMLTextAreaElement>(({className, onChange, ...props}: TextAreaProps, ref) => {
   const defaultClassName = 'resize-none';
 
   const resizeOnChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
