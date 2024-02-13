@@ -23,6 +23,8 @@ function LeftNavBar() {
   const user = useUserContext();
   const navigate = useNavigate();
 
+  console.log(pathname);
+
   const logout = () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     navigate('/');
@@ -46,7 +48,7 @@ function LeftNavBar() {
         {routeConfig.map((route) => {
           if (!route?.meta?.icon) return null;
 
-          const isActive = pathname === route.path;
+          const isActive = pathname.includes(route.path);
           const Icon = isActive ? route.meta.icon.active : route.meta.icon.inactive;
           const path = route.path === '/:username' ? `/${user?.username}` : route.path;
 
