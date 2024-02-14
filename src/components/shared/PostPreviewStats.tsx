@@ -2,44 +2,49 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import RepeatIcon from '@mui/icons-material/Repeat';
+import { Edit } from 'lucide-react';
 import React, { useState } from 'react';
 
-import { useLikePost , useUnlikePost } from '@/react-query/queriesAndMutations';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useGlobalContext } from '@/context/GlobalContext';
+import { useLikePost , useRepostPostById, useUnlikePost } from '@/react-query/queriesAndMutations';
+import { IPostPreview } from '@/types';
 
 import IconButton from './IconButton';
 
-
-export interface PostStatsProps {
-  id: string;
-  liked: boolean;
-  like_count: number;
-  comment_count: number;
-  repost_count: number;
-  view_count: number;
-  bookmarked: boolean;
-}
-
-function PostPreviewStats({id, liked: initial_liked, like_count: initial_like_count, comment_count, repost_count, view_count, bookmarked}: PostStatsProps) {
+function PostPreviewStats(props: IPostPreview) {
+  const {id, liked: initial_liked, like_count: initial_like_count, comment_count, repost_count, view_count, bookmarked} = props;
   const [liked, setLiked] = useState(initial_liked);
   const [like_count, setLikeCount] = useState(initial_like_count);
+  const { openDialog } = useGlobalContext().dialog;
+
+  const { mutateAsync: likePost } = useLikePost(id);
+  const { mutateAsync: unlikePost } = useUnlikePost(id);
+  const { mutateAsync: repost} = useRepostPostById(id);
 
   const onLikeSuccess = () => {
     setLiked(true);
     setLikeCount((prev) => prev + 1);
   };
 
-
-
   const onUnlikeSuccess = () => {
     setLiked(false);
     setLikeCount((prev) => prev - 1);
   };
 
-  const handleLikeClick = () => {
+  const handleLikeClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
     if (liked) {
       unlikePost(undefined, {onSuccess: onUnlikeSuccess});
     } else {
@@ -47,8 +52,15 @@ function PostPreviewStats({id, liked: initial_liked, like_count: initial_like_co
     }
   };
 
-  const { mutateAsync: likePost } = useLikePost(id);
-  const { mutateAsync: unlikePost } = useUnlikePost(id);
+  const handleQuoteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openDialog('repost-post', {...props});
+  };
+
+  const handleRepostClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    repost({});
+  };
 
 
   return (
@@ -63,12 +75,30 @@ function PostPreviewStats({id, liked: initial_liked, like_count: initial_like_co
       </div>
 
       <div className="flex flex-1 justify-start">
-        <div className="flex justify-start items-center group/repost gap-1 hover:cursor-pointer">
-          <IconButton className="text-[#536471] group-hover/repost:text-[#00ba7c]  text-xl">
-            <RepeatIcon sx={{fontSize: '1.3rem'}}/>
-          </IconButton>
-          <span className="text-sm group-hover/repost:text-[#00ba7c] select-none">{repost_count || ''}</span>
-        </div>
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger>
+            <div className="flex justify-start items-center group/repost gap-1 hover:cursor-pointer">
+              <IconButton className="text-[#536471] group-hover/repost:text-[#00ba7c]  text-xl" onClick={(e) => e.stopPropagation()}>
+                <RepeatIcon sx={{fontSize: '1.3rem'}}/>
+              </IconButton>
+              <span className="text-sm group-hover/repost:text-[#00ba7c] select-none">{repost_count || ''}</span>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="rounded-2xl p-0">
+            <DropdownMenuItem className="py-2 px-4 hover:cursor-pointer h-[44px]" onClick={handleRepostClick}>
+              <div className="flex gap-2">
+                <RepeatIcon sx={{fontSize: '1.3rem'}}/>
+                <span className="text-base font-bold">Repost</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="py-2 px-4 hover:cursor-pointer h-[44px]" onClick={handleQuoteClick}>
+              <div className="flex gap-2">
+                <EditOutlinedIcon sx={{fontSize: '1.3rem'}}/>
+                <span className="text-base font-bold">Quote</span>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex flex-1 justify-start">

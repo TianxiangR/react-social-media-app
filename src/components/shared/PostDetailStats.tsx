@@ -1,4 +1,3 @@
-import BarChartIcon from '@mui/icons-material/BarChart';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderOutlinedIcon from '@mui/icons-material/BookmarkBorderOutlined';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
@@ -9,6 +8,7 @@ import RepeatIcon from '@mui/icons-material/Repeat';
 import React, { useState } from 'react';
 
 import { useLikePost , useUnlikePost } from '@/react-query/queriesAndMutations';
+import { IPostPreview } from '@/types';
 
 import IconButton from './IconButton';
 
@@ -22,7 +22,7 @@ export interface PostStatsProps {
   view_count: number;
   bookmarked: boolean;
 }
-function PostDetailStats({id, liked: initial_liked, like_count: initial_like_count, comment_count, repost_count, view_count, bookmarked}: PostStatsProps) {
+function PostDetailStats({id, liked: initial_liked, like_count: initial_like_count, comment_count, repost_count, view_count, bookmarked}: IPostPreview) {
   const [liked, setLiked] = useState(initial_liked);
   const [like_count, setLikeCount] = useState(initial_like_count);
 

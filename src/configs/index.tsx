@@ -12,6 +12,7 @@ import React from 'react';
 
 import Home from '@/pages/HomePage';
 import PostPage from '@/pages/PostPage';
+import ProfilePage from '@/pages/ProfilePage';
 
 export const routeConfig = [
   {
@@ -60,7 +61,7 @@ export const routeConfig = [
   },
   {
     path: '/:username',
-    element: <h1>Profile</h1>,
+    element: <ProfilePage />,
     label: 'Profile',
     meta: {
       icon: {

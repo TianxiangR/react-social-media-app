@@ -1,22 +1,37 @@
 
+import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useGlobalContext } from '@/context/GlobalContext';
 import { multiFormatDateString } from '@/lib/utils';
-import { IPostPreview } from '@/types';
+import { useDeletePostById } from '@/react-query/queriesAndMutations';
+import { AugmentedPostPreview, IPostPreview } from '@/types';
 
 import IconButton from './IconButton';
 import ImageView from './ImageView';
 import PostPreviewStats from './PostPreviewStats';
+import QuotedPost from './QuotedPost';
 
-function PostPreview({
-  images, author, created_at, content, ...props
-}: IPostPreview) {
+function PostPreview(props: AugmentedPostPreview) {
+  const { author, content, created_at, images, repost_parent } = props;
   const navigate = useNavigate();
+  const { mutateAsync: deletePost } = useDeletePostById(props.id);
   
   const handleClick = () => {
     navigate(`/${author.username}/status/${props.id}`);
+  };
+
+  const handleDeletPost = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    deletePost();
   };
 
 
@@ -41,9 +56,22 @@ function PostPreview({
             </p>
           </div>
 
-          <IconButton className="text-[#536471] hover:text-blue">
-            <MoreHorizIcon sx={{fontSize: '24px'}}/>
-          </IconButton>
+          {/* Options */}
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger>
+              <IconButton className="text-[#536471] hover:text-blue" onClick={(e) => e.stopPropagation()}>
+                <MoreHorizIcon sx={{fontSize: '24px'}}/>
+              </IconButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="rounded-2xl p-0 h-[44px]">
+              <DropdownMenuItem className="py-2 px-4 hover:cursor-pointer" onClick={handleDeletPost}>
+                <div className='flex gap-2 items-center justify-start text-red-500'>
+                  <DeleteForeverOutlinedIcon sx={{fontSize: '22px'}}/>
+                  <span className="text-base font-bold">Delete</span>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Content */}
@@ -51,8 +79,15 @@ function PostPreview({
           <div className="text-box">
             {content}
           </div>
-          <div className="flex w-full mt-1" style={{display: images?.length > 0 ? 'flex' : 'none'}}>
-            <ImageView images={images} />
+
+          <div className="flex flex-col mt-2">
+            <div className="flex" style={{display: images?.length > 0 ? 'flex' : 'none'}}>
+              <ImageView images={images} rounded allowFullScreen/>
+            </div>
+            {
+              repost_parent && 
+              <QuotedPost post={repost_parent} />
+            }
           </div>
         </div>
 

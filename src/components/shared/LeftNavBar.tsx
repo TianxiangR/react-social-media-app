@@ -13,14 +13,14 @@ import {
 import { routeConfig } from '@/configs';
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { useUserContext } from '@/context/AuthContext';
+import { useGlobalContext } from '@/context/GlobalContext';
 
 import { Button } from '../ui/button';
-import CreatePostDialog from './CreatePostDialog';
 
 function LeftNavBar() {
   const { pathname } = useLocation();
-  const [open, setOpen] = useState(false);
-  const user = useUserContext();
+  const { openDialog } = useGlobalContext().dialog;
+  const {user} = useUserContext();
   const navigate = useNavigate();
 
   console.log(pathname);
@@ -31,7 +31,7 @@ function LeftNavBar() {
   };
 
   const handlePostClick = () => {
-    setOpen(true);
+    openDialog('create-post');
   };
 
   return (
@@ -48,15 +48,15 @@ function LeftNavBar() {
         {routeConfig.map((route) => {
           if (!route?.meta?.icon) return null;
 
-          const isActive = pathname.includes(route.path);
+          const isActive = pathname === route.path || pathname === route.path + '/' || (route.path === '/:username' && (pathname === `/${user?.username}` || pathname === `/${user?.username}/`) );
           const Icon = isActive ? route.meta.icon.active : route.meta.icon.inactive;
           const path = route.path === '/:username' ? `/${user?.username}` : route.path;
 
           return (
             <li key={route.label} className="flex">
-              <Link to={path} className="flex items-center gap-3 w-[auto] rounded-full p-2.5 hover:bg-[#e7e7e8]">
-                <Icon sx={{fontSize: '24px'}}/>
-                <span className={`${isActive ? 'text-black font-bold' : 'text-[#0f1419]'} text-[20px]`}>
+              <Link to={path} className="flex items-center gap-3 w-[auto] rounded-full p-2.5 hover:bg-[#e7e7e8] select-none">
+                <Icon sx={{fontSize: '28px'}}/>
+                <span className={`${isActive ? 'text-black font-bold' : 'text-[#0f1419]'} text-[20px] select-none`}>
                   {route.label}
                 </span>
               </Link>
@@ -72,7 +72,7 @@ function LeftNavBar() {
       </ul>
 
       {/* User */}
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <div className="w-full mb-3 px-2 hover:cursor-pointer">
             <div className="w-full flex rounded-full hover:bg-[#e7e7e8] py-2 pl-3 pr-4 items-center justify-between">
@@ -100,7 +100,6 @@ function LeftNavBar() {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <CreatePostDialog open={open} onClose={() => setOpen(false)}/>
     </nav>
   );
 }

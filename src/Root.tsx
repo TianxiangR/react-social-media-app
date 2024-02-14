@@ -14,9 +14,7 @@ function Root() {
         <AuthProvider>
           <GlobalContextProvider>
             <Outlet />
-            <ScrollRestoration getKey={(location, matches) => {
-              return location.pathname;
-            }} />
+            <ScrollRestoration getKey={(location) => location.pathname} />
           </GlobalContextProvider>
         </AuthProvider>
       </QueryProvider>

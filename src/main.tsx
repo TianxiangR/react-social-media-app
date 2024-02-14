@@ -7,7 +7,7 @@ import { routeConfig } from './configs';
 import { AuthProvider } from './context/AuthContext';
 import GlobalContextProvider from './context/GlobalContext';
 import Login from './pages/LoginPage';
-import SignUp from './pages/SignUp';
+import SignUp from './pages/SignUpPage';
 import { QueryProvider } from './react-query/QueryProvider';
 import Root from './Root';
 

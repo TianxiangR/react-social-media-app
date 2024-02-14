@@ -1,22 +1,21 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 import CreatePostForm from '@/components/shared/CreatePostForm';
 import PostPreview from '@/components/shared/PostPreview';
 import { useGlobalContext } from '@/context/GlobalContext';
-import { useGetPosts } from '@/react-query/queriesAndMutations';
+import { useGetUserLikes } from '@/react-query/queriesAndMutations';
 
 import Loader from './Loader';
 
+export interface UserLikesProps {
+  username: string;
+}
 
-function FollowingPosts() {
-  const globalContext = useGlobalContext();
-  const { data: posts, isPending: isLoadingPosts } = globalContext.home.following.queryResults;
+function UserLikes({ username }: UserLikesProps) {
+  const { data: posts, isPending: isLoadingPosts } = useGetUserLikes(username);
 
   return (
     <ul className="flex flex-col w-full h-full">
-      <li className="border-b-[1px] border-[#eff3f4]">
-        <CreatePostForm />
-      </li>
       {
         isLoadingPosts ? <Loader /> :
           posts?.map((post) => {
@@ -31,4 +30,4 @@ function FollowingPosts() {
   );
 }
 
-export default FollowingPosts;
+export default UserLikes;

@@ -16,10 +16,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { TOKEN_STORAGE_KEY } from '@/constants';
+import { useUserContext } from '@/context/AuthContext';
 import { signInSchema } from '@/validations';
 
 function Login() {
   const navigate = useNavigate();
+  const {user, setUser} = useUserContext();
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof signInSchema>>({
@@ -29,6 +31,7 @@ function Login() {
       password: '',
     },
   });
+
    
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof signInSchema>) {
@@ -42,6 +45,7 @@ function Login() {
     }
 
     window.localStorage.setItem(TOKEN_STORAGE_KEY, token?.access || '');
+    setUser(user);
     navigate('/home');
   }
 

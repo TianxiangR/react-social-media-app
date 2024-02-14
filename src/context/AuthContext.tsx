@@ -5,7 +5,15 @@ import { getCurrentUser } from '@/apis';
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { User } from '@/types';
 
-const AuthContext = createContext<User|null>(null);
+export type AuthContextType = {
+  user: User | null;
+  setUser: (user: User | null) => void;
+};
+
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  setUser: () => {},
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -27,7 +35,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, []);
 
-  return <AuthContext.Provider value={user}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{user, setUser}}>{children}</AuthContext.Provider>;
 }
 
 export const useUserContext = () => useContext(AuthContext);

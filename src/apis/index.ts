@@ -7,7 +7,7 @@ const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 console.log('baseUrl', baseUrl);
 
-export async function createUser(user: NewUser): Promise<TokenResponse | undefined> {
+export async function createUser(user: NewUser): Promise<TokenResponse> {
 
   const formData = getFormDataFromObject(user);
   const response = await fetch(`${baseUrl}/api/signup/`, {
@@ -25,7 +25,7 @@ export async function createUser(user: NewUser): Promise<TokenResponse | undefin
 
 }
 
-export async function signInUser(email: string, password: string): Promise<TokenResponse | undefined>{
+export async function signInUser(email: string, password: string): Promise<TokenResponse>{
 
   const response = await fetch(`${baseUrl}/api/login/`, {
     method: 'POST',
@@ -44,7 +44,7 @@ export async function signInUser(email: string, password: string): Promise<Token
 
 }
 
-export async function getCurrentUser(): Promise<User | undefined> {
+export async function getCurrentUser(): Promise<User> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY);
 
   const response = await fetch(`${baseUrl}/api/get-current-user/`, {
@@ -62,7 +62,7 @@ export async function getCurrentUser(): Promise<User | undefined> {
 
 }
 
-export async function publicQueryUser(query: Record<string, string | number | boolean | null>): Promise<{ found: boolean } | undefined> {
+export async function publicQueryUser(query: Record<string, string | number | boolean | null>): Promise<{ found: boolean }> {
   const response = await fetch(`${baseUrl}/api/public-query-user/?${getQueryStringFromObject(query)}`);
 
   if (!response.ok) {
@@ -94,7 +94,7 @@ export async function createPost(post: NewPost): Promise<void> {
 
 }
 
-export async function getPosts(): Promise<IPostPreview[] | undefined> {
+export async function getPosts(): Promise<IPostPreview[]> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
 
   const response = await fetch(`${baseUrl}/api/posts/`, {
@@ -188,4 +188,94 @@ export async function replyPostById(postId: string, reply: NewPost): Promise<voi
   if (!response.ok) {
     throw new Error('Network response was not ok');
   }
+}
+
+export async function repostPostById(postId: string, post: Partial<NewPost>): Promise<void> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const formData = getFormDataFromObject(post);
+  const response = await fetch(`${baseUrl}/api/posts/${postId}/reposts/`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+}
+
+export async function queryUserByUsername(username: string): Promise<User> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+
+  const response = await fetch(
+    `${baseUrl}/api/users/${username}/`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+export async function queryPostsByUsername(username: string): Promise<IPostPreview[]> {
+  const response = await fetch(
+    `${baseUrl}/api/users/${username}/posts/`,
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem(TOKEN_STORAGE_KEY)}`,
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+export async function queryLikesByUsername(username: string): Promise<IPostPreview[]> {
+  const response = await fetch(
+    `${baseUrl}/api/users/${username}/likes/`,
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem(TOKEN_STORAGE_KEY)}`,
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+export async function queryMediaByUsername(username: string): Promise<{images: string[]}> {
+  const response = await fetch(
+    `${baseUrl}/api/users/${username}/media/`,
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem(TOKEN_STORAGE_KEY)}`,
+      }
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+  return data;
 }

@@ -117,7 +117,7 @@ function Slides({children, defaultPosition='none', slideCols = 1, scrollCols = 1
   }, [scrollPosition]);
 
   return (
-    <div className="w-full max-w-full relative">
+    <div className="w-full max-w-full h-full max-h-full relative">
       { showLeftArrow && 
               <Button
                 className="flex justify-center items-center w-fit rounded-full p-2 hover:bg-[#1d2124] hover:cursor-pointer bg-[#0b0f13] text-black absolute top-[45%] left-1 z-10"
@@ -135,7 +135,7 @@ function Slides({children, defaultPosition='none', slideCols = 1, scrollCols = 1
               </Button>
       }
       <div
-        className="flex gap-0 overflow-x-auto overflow-y-hidden mt-4 relative" 
+        className="flex h-full w-full gap-0 overflow-x-auto overflow-y-hidden relative" 
         ref={scrollContainerRef} 
         style={{
           scrollbarWidth: 'none',
@@ -146,7 +146,7 @@ function Slides({children, defaultPosition='none', slideCols = 1, scrollCols = 1
         {
           React.Children.map(children, (child, index) => {
             return (
-              <div className='w-full overflow-hidden' key={index} style={{minWidth: `calc(100% / ${actualSlideCols})`}}>
+              <div className='w-full h-full overflow-hidden' key={index} style={{minWidth: `calc(100% / ${actualSlideCols})`}}>
                 {child}
               </div>
             );

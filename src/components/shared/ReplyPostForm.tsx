@@ -3,7 +3,7 @@ import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import React, { useEffect,useRef, useState } from 'react';
 
 import { useUserContext } from '@/context/AuthContext';
-import { useReplyPostById } from '@/react-query/queriesAndMutations';
+import { useCreatePost, useReplyPostById } from '@/react-query/queriesAndMutations';
 import { UserPreview } from '@/types';
 
 import { Button } from '../ui/button';
@@ -16,16 +16,16 @@ export type ReplyPostProps = {
   author: UserPreview;
 }
 
-function ReplyPostForm({ postId, author }: ReplyPostProps) {
+function replyPostForm({postId, author}: ReplyPostProps) {
   const selectFileRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [inputText, setInputText] = useState('');
   const enablePost = imageUrls.length > 0 || inputText !== '';
-  const enableImage = imageUrls.length < 10;
-  const user = useUserContext();
-  const { mutateAsync: replyPostById } = useReplyPostById(postId);
+  const enableImage = imageUrls.length < 4;
+  const {user} = useUserContext();
+  const { mutateAsync: replyPost } = useReplyPostById(postId);
 
   useEffect(() => {
     const observer = new MutationObserver((mutations) => {
@@ -69,19 +69,17 @@ function ReplyPostForm({ postId, author }: ReplyPostProps) {
     setInputText(e.target.value);
   };
 
-  const handleReplyPost = async () => {
-    replyPostById( { content: inputText, images: imageFiles }, {onSuccess: clearInput});
+  const handleCreatePost = async () => {
+    replyPost( { content: inputText, images: imageFiles }, {onSuccess: clearInput});
   };
 
   return (
     <>
-      <div className="flex flex-col w-full">
-        <div className="flex w-full pl-7 pr-4 text-base ml-[40px] text-[#677681]">
-              Replying to <span className="text-blue ml-1">@{author.username}</span>
+      <div className="flex flex-col">
+        <div className="flex justify-between items-center ml-[52px] mb-4">
+          <span className="text-base text-[#536471]">Replying to <span className="text-blue">@{author.username}</span></span>
         </div>
-        <div className="w-full gap-3 px-4 pt-2 pb-0 box-border flex hover:cursor-text"
-          onClick={focusOnInput}
-        >
+        <div className="w-full gap-3 box-border flex">
           <img src={user?.profile_image} className="profile-image" />
           <div className="w-full flex-col flex ">
             {/* Input Area */}
@@ -131,9 +129,9 @@ function ReplyPostForm({ postId, author }: ReplyPostProps) {
             </div>
 
             {/* Footer */}
-            <div className="flex justify-between sticky bottom-0 bg-transparent rounded-b-lg border-t-[1px] border-[#eff3f4] items-center pt-2">
+            <div className="flex justify-between sticky bottom-0 bg-transparent rounded-b-lg border-t-[1px] border-[#eff3f4] items-center py-2">
               <div className="flex items-center">
-                <IconButton className='text-[#1d9bf0] text-xl'onClick={handleSelectFileClick}>
+                <IconButton className='text-[#1d9bf0] text-xl' onClick={handleSelectFileClick} disabled={!enableImage}>
                   <ImageOutlinedIcon />
                   <input type="file" className="hidden" accept="image/*" ref={selectFileRef} onChange={handleFileChange}/>
                 </IconButton>
@@ -142,7 +140,7 @@ function ReplyPostForm({ postId, author }: ReplyPostProps) {
                 <Button
                   className="w-full h-9 bg-blue rounded-full hover:bg-blue-100"
                   disabled={!enablePost}
-                  onClick={handleReplyPost}
+                  onClick={handleCreatePost}
                 >
                   <span className="font-bold text-[15px]">Reply</span>
                 </Button>
@@ -155,4 +153,4 @@ function ReplyPostForm({ postId, author }: ReplyPostProps) {
   );
 }
 
-export default ReplyPostForm;
+export default replyPostForm;

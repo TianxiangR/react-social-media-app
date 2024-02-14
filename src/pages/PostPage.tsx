@@ -8,6 +8,7 @@ import ImageView from '@/components/shared/ImageView';
 import Loader from '@/components/shared/Loader';
 import PostDetailStats from '@/components/shared/PostDetailStats';
 import PostPreview from '@/components/shared/PostPreview';
+import QuotedPost from '@/components/shared/QuotedPost';
 import ReplyPostForm from '@/components/shared/ReplyPostForm';
 import { useGetPostById } from '@/react-query/queriesAndMutations';
 
@@ -16,13 +17,16 @@ function PostPage() {
   const { username = '', postId = '-1' } = useParams();
   const {data: post, isPending, isError} = useGetPostById(postId);
   const navigate = useNavigate();
-  console.log('post page');
 
   useEffect(() => {
     if (!isPending && !isError && post.author.username !== username) {
       navigate(`/${post.author.username}/status/${postId}`);
     }
   }, [post, isPending]);
+
+  const jumpToPost = (postId: string) => {
+    navigate(`/${username}/status/${postId}`);
+  };
 
 
   const renderPost = () => {
@@ -37,10 +41,10 @@ function PostPage() {
     // no-op
     }
     else if (post) {
-      const { author, content, created_at, images, replies, ...stats } = post;
+      const { author, content, created_at, images, replies } = post;
       return (
         <div className="flex flex-col w-full">
-          <div className="flex flex-col px-4 pt-4 pb-2 w-full border-b-[1px] border-[#eff3f4]">
+          <div className="flex flex-col px-4 pt-4 w-full border-b-[1px] border-[#eff3f4]">
             <div className="flex justify-between">
               {/* top */}
               <div className="flex gap-2 items-center">
@@ -62,12 +66,19 @@ function PostPage() {
                 {content}
               </div>
               <div className="flex w-full mt-2" style={{display: images?.length > 0 ? 'flex' : 'none'}}>
-                <ImageView images={images} size="large" />
+                <ImageView images={images} size="large" rounded />
               </div>
+              {
+                post.repost_parent && (
+                  <div className="flex hover:cursor-pointer" onClick={() => jumpToPost(post.repost_parent?.id || '')}>
+                    <QuotedPost post={post.repost_parent} />
+                  </div>
+                )
+              }
             </div>
 
             <div className="mt-4 px-1 py-2 border-[#eff3f4] border-y-[1px]">
-              <PostDetailStats {...stats} />
+              <PostDetailStats {...post} />
             </div>
 
             <div className="mt-2">
@@ -90,7 +101,7 @@ function PostPage() {
   };
 
   return (
-    <div className="h-full border-r-[1px] border-[#eff3f4] w-[600px] max-w-[600px]">
+    <div className="h-full w-full">
       <div className="h-14 top-0 border-[#eff3f4] border-b-[1px] z-10 sticky-bar flex items-center p-4">
         <div className="min-w-14">
           <IconButton className="text-xl" onClick={() => navigate(-1)}>

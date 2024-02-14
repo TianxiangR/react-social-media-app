@@ -17,7 +17,9 @@ function RootLayer() {
       </div>
 
       <div className="flex flex-auto items-start h-full xl:w-[1050px] lg:w-[920px]">
-        <Outlet />
+        <div className="flex h-auto min-h-screen w-full max-w-[600px] border-r-[1px] border-[#eff3f4]">
+          <Outlet />
+        </div>
       </div>
     </div>
   );

@@ -24,27 +24,12 @@ function CreatePostForm() {
   const [inputText, setInputText] = useState('');
   const enablePost = imageUrls.length > 0 || inputText !== '';
   const enableImage = imageUrls.length < 4;
-  const user = useUserContext();
+  const {user} = useUserContext();
   const { mutateAsync: createPost } = useCreatePost();
-
-  useEffect(() => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'childList' || mutation.type === 'characterData') {
-          const target = mutation.target as HTMLElement;
-          console.log(target.textContent);
-          setInputText(target.textContent || '');
-        }
-      });
-    });
-    observer.observe(inputRef.current as Node, { childList: true, characterData: true, subtree: true });
-    return () => observer.disconnect();
-  }, []);
 
   const focusOnInput = () => { 
     inputRef.current?.focus();
   };
-
 
   const handleSelectFileClick = () => {
     selectFileRef.current?.click(); 

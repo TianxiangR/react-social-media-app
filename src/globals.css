@@ -138,4 +138,21 @@
     -webkit-line-clamp: var(--max-lines);
     white-space: pre-wrap;
   }
+
+  .block-list {
+    @apply block;
+  }
+
+  .block-list>*:nth-child(n) {
+    @apply ml-4;
+  }
+
+  .block-list>*:first-child {
+    @apply ml-0;
+  }
+}
+
+
+:root {
+  overflow-y: scroll;
 }

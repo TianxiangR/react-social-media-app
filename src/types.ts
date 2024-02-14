@@ -22,6 +22,10 @@ export type User = {
   email: string;
   date_of_birth: string;
   created_at: string;
+  bio: string;
+  followers: number;
+  following: number;
+  location: string;
 } & UserPreview;
 
 export type IPostPreview = {
@@ -38,30 +42,42 @@ export type IPostPreview = {
   view_count: number;
 };
 
+export type AugmentedPostPreview = IPostPreview & {
+  repost_parent?: IPostPreview;
+  reply_parent?: IPostPreview;
+};
+
 export type NewPost = {
   content: string;
   images: File[];
 };
 
-export type IPost = IPostPreview & {
+export type IPost = AugmentedPostPreview & {
   replies: IPostPreview[];
 };
 
+export type DialogType = 'create-post' | 'reply-post' | 'edit-post' | 'repost-post' | 'view-image';
+
 export type GlobalState = {
-  globalScrollY: number;
-  setGlobalScrollY: Dispatch<SetStateAction<number>>;
   home: {
     currentTab : 'for-you' | 'following';
     setCurrentTab: Dispatch<SetStateAction<'for-you' | 'following'>>;
     for_you: {
       queryResults : UseQueryResult<IPostPreview[] | undefined, Error>;
-      scrollY: number;
-      setScrollY: Dispatch<SetStateAction<number>>;
     }
     following: {
       queryResults : UseQueryResult<IPostPreview[] | undefined, Error>;
-      scrollY: number;
-      setScrollY: Dispatch<SetStateAction<number>>;
     }
+  },
+  profile: {
+    currentTab: 'posts' | 'replies' | 'media' | 'likes';
+    setCurrentTab: Dispatch<SetStateAction<'posts' | 'replies' | 'media' | 'likes'>>;
+  },
+  dialog: {
+    openDialog: (type: DialogType, ...args: unknown[]) => void;
+    closeDialog: () => void;
   }
 };
+
+export type HomeTab = GlobalState['home']['currentTab'];
+export type ProfileTab = GlobalState['profile']['currentTab'];
