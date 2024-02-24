@@ -7,7 +7,6 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import IosShareIcon from '@mui/icons-material/IosShare';
 import RepeatIcon from '@mui/icons-material/Repeat';
-import { Edit } from 'lucide-react';
 import React, { useState } from 'react';
 
 import {
@@ -17,9 +16,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useGlobalContext } from '@/context/GlobalContext';
-import { useLikePost , useRepostPostById, useUnlikePost } from '@/react-query/queriesAndMutations';
+import { useAddBookmark, useLikePost , useRemoveBookmark, useRepostPostById, useUnlikePost } from '@/react-query/queriesAndMutations';
 import { IPostPreview } from '@/types';
 
+import PostDialogContent from './CreatePostDialogContent';
 import IconButton from './IconButton';
 
 function PostPreviewStats(props: IPostPreview) {
@@ -30,7 +30,9 @@ function PostPreviewStats(props: IPostPreview) {
 
   const { mutateAsync: likePost } = useLikePost(id);
   const { mutateAsync: unlikePost } = useUnlikePost(id);
-  const { mutateAsync: repost} = useRepostPostById(id);
+  const { mutateAsync: repost } = useRepostPostById(id);
+  const { mutateAsync: addBookmark } = useAddBookmark(id);
+  const { mutateAsync: removeBookmark } = useRemoveBookmark(id);
 
   const onLikeSuccess = () => {
     setLiked(true);
@@ -54,7 +56,7 @@ function PostPreviewStats(props: IPostPreview) {
 
   const handleQuoteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    openDialog('repost-post', {...props});
+    openDialog(() => <PostDialogContent variant='repost' parent_post={props}/>);
   };
 
   const handleRepostClick = (e: React.MouseEvent) => {
@@ -62,12 +64,21 @@ function PostPreviewStats(props: IPostPreview) {
     repost({});
   };
 
+  const handleBookmarkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (bookmarked) {
+      removeBookmark();
+    } else {
+      addBookmark();
+    }
+  };
+
 
   return (
-    <div className='flex justify-between items-center group/comment w-full'>
+    <div className='flex justify-between items-center w-full'>
       <div className="flex flex-1 justify-start">
-        <div className="flex justify-start items-center group gap-1.5 hover:cursor-pointer">
-          <IconButton className="text-[#536471] group-hover:text-blue text-xl">
+        <div className="flex justify-start items-center group/comment gap-1.5 hover:cursor-pointer">
+          <IconButton className="text-[#536471] group-hover/comment:text-blue text-xl">
             <ChatBubbleOutlineIcon sx={{fontSize: '1.25rem'}}/>
           </IconButton>
           <span className="text-sm group-hover:text-blue select-none">{comment_count || ''}</span>
@@ -120,8 +131,8 @@ function PostPreviewStats(props: IPostPreview) {
       </div>
       
       <div className="flex justify-start items-center gap-3">
-        <IconButton className="text-[#536471] hover:text-blue text-xl">
-          {bookmarked ? <BookmarkIcon sx={{fontSize: '1.4rem'}}/> : <BookmarkBorderOutlinedIcon sx={{fontSize: '1.5rem'}}/>}
+        <IconButton className="text-[#536471] hover:text-blue text-xl" onClick={handleBookmarkClick}>
+          {bookmarked ? <BookmarkIcon sx={{fontSize: '1.4rem', color: 'rgb(29, 155, 240)'}}/> : <BookmarkBorderOutlinedIcon sx={{fontSize: '1.4rem'}}/>}
         </IconButton>
         <IconButton className="text-[#536471] hover:text-blue text-xl">
           <IosShareIcon sx={{fontSize: '1.4rem'}}/>

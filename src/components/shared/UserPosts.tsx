@@ -15,7 +15,7 @@ function UserPosts({ username }: UserPostsProps) {
   const { data: posts, isPending: isLoadingPosts } = useGetUserPosts(username);
 
   return (
-    <ul className="flex flex-col w-full h-full">
+    <ul className="flex flex-col w-full h-full post-list">
       {
         isLoadingPosts ? <Loader /> :
           posts?.map((post) => {

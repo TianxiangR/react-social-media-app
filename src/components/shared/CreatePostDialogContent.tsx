@@ -89,7 +89,7 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
   };
 
   return (  
-    <div className="overflow-auto relative rounded-lg bg-white" style={{maxHeight: 'calc(100vh - 3rem - 6px)'}}>
+    <div className="overflow-auto w-[600px] relative rounded-lg bg-white" style={{maxHeight: 'calc(100vh - 3rem - 6px)'}}>
 
       {/* Top Bar */}
       <div className="flex justify-start p-2 pb-0 top-0 sticky-bar">

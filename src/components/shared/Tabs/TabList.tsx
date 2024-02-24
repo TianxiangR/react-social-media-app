@@ -11,7 +11,7 @@ export type TabListProps<T extends string> = Omit<React.ComponentPropsWithoutRef
 
 // eslint-disable-next-line react/prop-types
 function TabList<T extends string>({onChange, children, className, ...props}: TabListProps<T>) {
-  const newClassName = cn('flex w-full', className);
+  const newClassName = cn('flex w-full h-[53px]', className);
 
   const renderChildren = () => {
     if (!children) return null;

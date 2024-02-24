@@ -15,7 +15,7 @@ function UserLikes({ username }: UserLikesProps) {
   const { data: posts, isPending: isLoadingPosts } = useGetUserLikes(username);
 
   return (
-    <ul className="flex flex-col w-full h-full">
+    <ul className="flex flex-col w-full h-full post-list">
       {
         isLoadingPosts ? <Loader /> :
           posts?.map((post) => {

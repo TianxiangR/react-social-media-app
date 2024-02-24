@@ -11,13 +11,13 @@ function RootLayer() {
   return (
     <div className="w-full max-h-screen h-screen flex">
       <div className="flex-auto flex flex-col items-end ml-[60px] w-[275px]">
-        <div className="fixed top-0">
+        <div className="fixed top-0 border-[#eff3f4] border-r-[1px]">
           <LeftNavBar />
         </div>
       </div>
 
       <div className="flex flex-auto items-start h-full xl:w-[1050px] lg:w-[920px]">
-        <div className="flex h-auto min-h-screen w-full max-w-[600px] border-r-[1px] border-[#eff3f4]">
+        <div className="flex h-auto min-h-screen w-full max-w-[600px] border-[#eff3f4] border-r-[1px]">
           <Outlet />
         </div>
       </div>

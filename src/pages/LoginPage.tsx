@@ -15,13 +15,14 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { TOKEN_STORAGE_KEY } from '@/constants';
 import { useUserContext } from '@/context/AuthContext';
+import { useLoginUser } from '@/react-query/queriesAndMutations';
 import { signInSchema } from '@/validations';
 
 function Login() {
   const navigate = useNavigate();
-  const {user, setUser} = useUserContext();
+  const {user} = useUserContext();
+  const {mutate: loginUser} = useLoginUser();
 
   // 1. Define your form.
   const form = useForm<z.infer<typeof signInSchema>>({
@@ -35,18 +36,10 @@ function Login() {
    
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof signInSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
-    const token = await signInUser(values.email, values.password);
-
-    if (token === undefined) {
-      return;
-    }
-
-    window.localStorage.setItem(TOKEN_STORAGE_KEY, token?.access || '');
-    setUser(user);
-    navigate('/home');
+    const {email, password} = values;
+    loginUser({email, password}, {onSuccess: () => {
+      navigate('/home');
+    }});
   }
 
   return (

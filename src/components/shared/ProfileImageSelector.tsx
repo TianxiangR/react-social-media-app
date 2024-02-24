@@ -105,13 +105,8 @@ function ProfileImageSelector({onChange, src}: ProfileImageSelectorProps) {
           </div>
         )}
       </div>
-      <dialog ref={dialogRef} className="dialog px-6 py-4 ">
+      <dialog ref={dialogRef} className="dialog w-[600px] px-6 py-4 ">
         <div className="relative w-full h-full flex flex-col">
-          <Button 
-            type="button"
-            className="flex justify-center items-center w-fit absolute top-2 right-2 rounded-full p-2 hover:bg-[#e6e6e7] hover:cursor-pointer bg-transparent text-black">
-            <CloseIcon />
-          </Button>
           <div className='flex flex-col gap-4 mt-[50px]'>
             <header className="mt-0">
               <h1 className="text-2xl font-bold">Crop Image</h1>

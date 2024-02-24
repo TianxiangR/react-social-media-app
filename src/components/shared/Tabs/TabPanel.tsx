@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
 import { useTabContext } from '.';
 
@@ -9,20 +9,10 @@ export type TabPanelProps = React.ComponentPropsWithoutRef<'div'> & {
 // eslint-disable-next-line react/prop-types
 function TabPanel({value, children, className}: TabPanelProps) {
   const {activeTab} = useTabContext();
-  const [newClassName, setNewClassName] = useState('');
-
-  useEffect(() => {
-    if (activeTab === value) {
-      setNewClassName(className || '');
-    }
-    else {
-      setNewClassName('hidden');
-    }
-  }, [activeTab, value, className]);
-
-  return (
-    <div className={newClassName}>{children}</div>
-  );
+  
+  return activeTab === value ? (
+    <section className={className}>{children}</section>
+  ) : <></>;
 }
 
 export default TabPanel;

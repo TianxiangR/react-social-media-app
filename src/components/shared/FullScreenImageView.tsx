@@ -12,7 +12,7 @@ export interface FullScreenImageViewProps {
   defaultIndex?: number;
 }
 
-function FullScreenImageView({ images, defaultIndex = 1 }: FullScreenImageViewProps) {
+function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewProps) {
   const { closeDialog } = useGlobalContext().dialog;
   const [startX, setStartX] = useState(0);
   const [startOffset, setStartOffset] = useState(0);
@@ -28,6 +28,8 @@ function FullScreenImageView({ images, defaultIndex = 1 }: FullScreenImageViewPr
     };
     window.addEventListener('resize', handleResize);
 
+    console.log(slideIndex);
+
     return () => {
       window.removeEventListener('resize', handleResize);
     };
@@ -38,15 +40,20 @@ function FullScreenImageView({ images, defaultIndex = 1 }: FullScreenImageViewPr
   }, [screenWidth]);
 
   const handleMousedown = (e: React.MouseEvent) => {
+    e.stopPropagation();
     e.preventDefault();
     setStartX(e.clientX);
     setStartOffset(offset);
     setIsDown(true);
   };
 
-
-  const handleMouseUp = () => {
+  const handleScrollEnd = (endX: number) => {
     setIsDown(false);
+    
+    if (Math.abs(endX - startX) < 10) {
+      console.log('endX - startX < 10', endX - startX);
+      closeDialog();
+    }
 
     // adjust position
     const containerLength = containerRef.current?.clientWidth || 0;
@@ -80,11 +87,21 @@ function FullScreenImageView({ images, defaultIndex = 1 }: FullScreenImageViewPr
     setSlideIndex(Math.round(actualOffset / slideWidth));
   };
 
-  const handleMouseLeave = () => {
-    handleMouseUp();
+  const handleMouseUp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    handleScrollEnd(e.clientX);
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    handleScrollEnd(e.clientX);
   };
 
   const handleMousMove = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     if (!isDown) return;
     const x = e.clientX;
     const walk = (x - startX) * 5;
@@ -93,16 +110,22 @@ function FullScreenImageView({ images, defaultIndex = 1 }: FullScreenImageViewPr
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     setStartX(e.touches[0].clientX);
     setStartOffset(offset);
     setIsDown(true);
   };
 
-  const handleTouchEnd = () => {
-    handleMouseUp();
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    handleScrollEnd(e.changedTouches[0].clientX);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     if (!isDown) return;
     const x = e.touches[0].clientX;
     const walk = (x - startX) * 5;
@@ -110,18 +133,24 @@ function FullScreenImageView({ images, defaultIndex = 1 }: FullScreenImageViewPr
     setOffset((prev) => Math.min(containerLength - window.innerWidth, Math.max(0, startOffset - walk)));
   };
 
-  const handleTouchCancel = () => {
-    handleTouchEnd();
+  const handleTouchCancel = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    handleScrollEnd(e.changedTouches[0].clientX);
   };
 
-  const moveLeft = () => {
+  const moveLeft = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     const slideWidth = window.innerWidth;
     const expectedOffset = Math.max(0, offset - slideWidth);
     setOffset(expectedOffset);
     setSlideIndex(Math.round(expectedOffset / slideWidth));
   };
 
-  const moveRight = () => {
+  const moveRight = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
     const slideWidth = window.innerWidth;
     const expectedOffset = Math.min((images.length - 1) * slideWidth, offset + slideWidth);
     setOffset(expectedOffset);

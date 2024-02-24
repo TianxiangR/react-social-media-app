@@ -13,8 +13,8 @@ function FollowingPosts() {
   const { data: posts, isPending: isLoadingPosts } = globalContext.home.following.queryResults;
 
   return (
-    <ul className="flex flex-col w-full h-full">
-      <li className="border-b-[1px] border-[#eff3f4]">
+    <ul className="flex flex-col w-full h-full post-list">
+      <li className="">
         <CreatePostForm />
       </li>
       {

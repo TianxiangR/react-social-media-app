@@ -27,7 +27,7 @@ function CustomDialog({ open, fullScreen, children }: CustomDialogProps) {
   }
 
   return (
-    <dialog className='dialog w-[600px] bg-transparent overflow-hidden' ref={diaglogRef} style={{maxHeight: 'calc(100vh - 3rem - 6px)'}}>
+    <dialog className='dialog bg-transparent overflow-hidden' ref={diaglogRef} style={{maxHeight: 'calc(100vh - 3rem - 6px)'}}>
       {children}
     </dialog>
   );

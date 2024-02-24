@@ -16,6 +16,7 @@ import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
 
 import { Button } from '../ui/button';
+import PostDialogContent from './CreatePostDialogContent';
 
 function LeftNavBar() {
   const { pathname } = useLocation();
@@ -31,11 +32,11 @@ function LeftNavBar() {
   };
 
   const handlePostClick = () => {
-    openDialog('create-post');
+    openDialog(() => <PostDialogContent variant="create" />);
   };
 
   return (
-    <nav className="h-screen flex flex-col justify-between border-r-[1px] border-[#eff3f4] w-[260px]">
+    <nav className="h-screen flex flex-col justify-between w-[260px]">
       <ul className="flex w-full flex-col gap-3 pt-2 px-[8px]">
         {/* Logo */}
         <li>

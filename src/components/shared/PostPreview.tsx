@@ -1,7 +1,9 @@
 
 import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import React from 'react';
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
+import PersonRemoveOutlinedIcon from '@mui/icons-material/PersonRemoveOutlined';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import {
@@ -10,10 +12,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useGlobalContext } from '@/context/GlobalContext';
+import { useUserContext } from '@/context/AuthContext';
 import { multiFormatDateString } from '@/lib/utils';
-import { useDeletePostById } from '@/react-query/queriesAndMutations';
-import { AugmentedPostPreview, IPostPreview } from '@/types';
+import { useDeletePostById, useFollowUser, useUnfollowUser } from '@/react-query/queriesAndMutations';
+import { AugmentedPostPreview } from '@/types';
 
 import IconButton from './IconButton';
 import ImageView from './ImageView';
@@ -24,6 +26,18 @@ function PostPreview(props: AugmentedPostPreview) {
   const { author, content, created_at, images, repost_parent } = props;
   const navigate = useNavigate();
   const { mutateAsync: deletePost } = useDeletePostById(props.id);
+  const { user } = useUserContext();
+  const {mutate: follow} = useFollowUser();
+  const {mutate: unfollow} = useUnfollowUser();
+
+  const handleFollowClick = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    if (author.is_following) {
+      unfollow(author.username);
+    } else {
+      follow(author.username);
+    }
+  };
   
   const handleClick = () => {
     navigate(`/${author.username}/status/${props.id}`);
@@ -37,7 +51,7 @@ function PostPreview(props: AugmentedPostPreview) {
 
   return (
     <div 
-      className="flex p-4 w-full border-b-[1px] border-[#eff3f4] hover:bg-[#f7f7f7] hover:cursor-pointer"
+      className="flex p-4 w-full hover:bg-[#f7f7f7] hover:cursor-pointer"
       onClick={handleClick}
     >
       {/* left */}
@@ -49,7 +63,7 @@ function PostPreview(props: AugmentedPostPreview) {
         <div className="flex justify-between w-full h-fit">
           <div className='flex h-fit'>
             <p>
-              <Link to='/profile'><span className="font-bold text-base hover:underline">{author.name}</span></Link>
+              <Link to={`/${author.username}`} onClick={(e) => e.stopPropagation()}><span className="font-bold text-base hover:underline">{author.name}</span></Link>
               <span className="text-[#75828d] text-base ml-1">@{author.username}</span>
               <span className="text-[#75828d] text-base ml-1">·</span>
               <time className="text-[#75828d] text-base ml-1">{multiFormatDateString(created_at)}</time>
@@ -58,25 +72,49 @@ function PostPreview(props: AugmentedPostPreview) {
 
           {/* Options */}
           <DropdownMenu modal={false}>
-            <DropdownMenuTrigger>
+            <DropdownMenuTrigger className="w-fit h-fit">
               <IconButton className="text-[#536471] hover:text-blue" onClick={(e) => e.stopPropagation()}>
                 <MoreHorizIcon sx={{fontSize: '24px'}}/>
               </IconButton>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="rounded-2xl p-0 h-[44px]">
-              <DropdownMenuItem className="py-2 px-4 hover:cursor-pointer" onClick={handleDeletPost}>
-                <div className='flex gap-2 items-center justify-start text-red-500'>
-                  <DeleteForeverOutlinedIcon sx={{fontSize: '22px'}}/>
-                  <span className="text-base font-bold">Delete</span>
-                </div>
-              </DropdownMenuItem>
+            <DropdownMenuContent className="rounded-2xl p-0 w-fit h-fit">
+              {
+                author.id !== user?.id ?
+                  <>
+                    {
+                      author.is_following ? (
+                        <DropdownMenuItem className="py-2 px-4 hover:cursor-pointer" onClick={handleFollowClick}>
+                          <div className='flex gap-2 items-center justify-start text-[#0f1419]'>
+                            <PersonRemoveOutlinedIcon sx={{fontSize: '22px'}}/>
+                            <span className="text-base font-bold">{`Unfollow @${author.username}`}</span>
+                          </div>
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem className="py-2 px-4 hover:cursor-pointer" onClick={handleFollowClick}>
+                          <div className='flex gap-2 items-center justify-start text-[#0f1419]'>
+                            <PersonAddAltIcon sx={{fontSize: '22px'}}/>
+                            <span className="text-base font-bold">{`Follow @${author.username}`}</span>
+                          </div>
+                        </DropdownMenuItem>
+                      )
+                    }
+                  </> :
+                  <>
+                    <DropdownMenuItem className="py-2 px-4 hover:cursor-pointer" onClick={handleDeletPost}>
+                      <div className='flex gap-2 items-center justify-start text-red-500'>
+                        <DeleteForeverOutlinedIcon sx={{fontSize: '22px'}}/>
+                        <span className="text-base font-bold">Delete</span>
+                      </div>
+                    </DropdownMenuItem>
+                  </>
+              }
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
 
         {/* Content */}
         <div className="flex flex-col gap-1">
-          <div className="text-box">
+          <div className="preview-text-box">
             {content}
           </div>
 

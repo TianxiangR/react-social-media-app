@@ -23,7 +23,7 @@ import { signUpPart1Schema, signUpPart2Schema, signUpPart3Schema, signUpSchema }
 function SignUp() {
   const navigate = useNavigate();
   const formContainerRef = useRef<HTMLDivElement>(null);
-  const [formIndex, setFormIndex] = useState(2);
+  const [formIndex, setFormIndex] = useState(0);
   const [formData,  setFormData] = useState<z.infer<typeof signUpSchema>>({
     email: '',
     username: '',

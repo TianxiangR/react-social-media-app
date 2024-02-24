@@ -1,7 +1,10 @@
 import React from 'react';
 
+import { useGlobalContext } from '@/context/GlobalContext';
 import { useGetUserMedia } from '@/react-query/queriesAndMutations';
 
+import FullScreenImageView from './FullScreenImageView';
+import ImageGrid from './ImageGrid';
 import Loader from './Loader';
 
 export interface UserMediaProps {
@@ -23,15 +26,8 @@ function UserMedia({ username }: UserMediaProps) {
       // no-op
     }
     else if (data) {
-      return (
-        <ul className="w-full h-full grid grid-cols-3 gap-1 p-1">
-          {data.images.map((image, index) => (
-            <li key={index} className="aspect-square">
-              <img src={image} alt="avatar" className="aspect-square object-cover object-center"/>
-            </li>
-          ))}
-        </ul>
-      );
+      const {images} = data;
+      return <ImageGrid images={images} />;
     }
   };
 

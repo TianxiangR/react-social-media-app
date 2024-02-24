@@ -10,9 +10,13 @@ import SearchIcon from '@mui/icons-material/Search';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import React from 'react';
 
+import BookmarksPage from '@/pages/BookmarksPage';
+import ExplorePage from '@/pages/ExplorePage';
 import Home from '@/pages/HomePage';
+import NotificationsPage from '@/pages/NotificationsPage';
 import PostPage from '@/pages/PostPage';
 import ProfilePage from '@/pages/ProfilePage';
+import SearchPage from '@/pages/SearchPage';
 
 export const routeConfig = [
   {
@@ -28,7 +32,7 @@ export const routeConfig = [
   },
   {
     path: '/explore',
-    element: <h1>Explore</h1>,
+    element: <ExplorePage />,
     label: 'Explore',
     meta: {
       icon: {
@@ -39,7 +43,7 @@ export const routeConfig = [
   },
   {
     path: '/notifications',
-    element: <h1>Notifications</h1>,
+    element: <NotificationsPage />,
     label: 'Notifications',
     meta: {
       icon : {
@@ -50,7 +54,7 @@ export const routeConfig = [
   },
   {
     path: '/bookmarks',
-    element: <h1>Bookmarks</h1>,
+    element: <BookmarksPage />,
     label: 'Bookmarks',
     meta: {
       icon: {
@@ -74,5 +78,10 @@ export const routeConfig = [
     path: '/:username/status/:postId',
     element: <PostPage />,
     label: 'Post'
+  },
+  {
+    path: '/search',
+    element: <SearchPage />,
+    label: 'Search'
   }
 ];

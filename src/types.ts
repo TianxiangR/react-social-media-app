@@ -26,7 +26,20 @@ export type User = {
   followers: number;
   following: number;
   location: string;
+  header_photo: string;
+  website: string;
+  is_following: boolean;
 } & UserPreview;
+
+export type UserProfile = {
+  bio: string; 
+  name: string;
+  profile_image: File;
+  header_photo: File;
+  website: string;
+  location: string;
+  date_of_birth: string;
+};
 
 export type IPostPreview = {
   id: string;
@@ -74,10 +87,61 @@ export type GlobalState = {
     setCurrentTab: Dispatch<SetStateAction<'posts' | 'replies' | 'media' | 'likes'>>;
   },
   dialog: {
-    openDialog: (type: DialogType, ...args: unknown[]) => void;
+    openDialog: (contentRenderer: () => React.ReactNode, options?: {fullScreen?: boolean}) => void;
     closeDialog: () => void;
   }
 };
 
 export type HomeTab = GlobalState['home']['currentTab'];
 export type ProfileTab = GlobalState['profile']['currentTab'];
+
+export type SearchTopResult = {
+  users: User[];
+  posts: AugmentedPostPreview[];
+}
+
+export type SearchLatestResult = {
+  posts: AugmentedPostPreview[];
+}
+
+export type SearchPeopleResult = {
+  users: User[];
+}
+
+export type SearchMediaResult = {
+  media: string[];
+}
+
+export type PostLike = {
+  id: string;
+  created_at: string;
+  user: User;
+  post: AugmentedPostPreview;
+}
+
+
+export type LikeNotification = {
+  id: string;
+  created_at: string;
+  type: 'like';
+  data: PostLike;
+  read: boolean;
+}
+
+export type PostNotification = {
+  id: string;
+  created_at: string;
+  type: 'repost' | 'reply';
+  data: AugmentedPostPreview;
+  read: boolean;
+}
+
+export type FollowNotification = {
+  id: string;
+  created_at: string;
+  type: 'follow';
+  data: User;
+  read: boolean;
+}
+
+export type Notification = PostNotification | FollowNotification | LikeNotification;

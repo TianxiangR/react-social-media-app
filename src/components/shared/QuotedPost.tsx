@@ -29,7 +29,7 @@ function QuotedPost({post}: {post: IPostPreview}) {
 
         {/* Content */}
         <div className="flex flex-col gap-1 mt-1 mb-2">
-          <div className="text-box text-sm text-[#0f1419]">
+          <div className="preview-text-box text-sm text-[#0f1419]">
             {content}
           </div>
         </div>
@@ -37,7 +37,7 @@ function QuotedPost({post}: {post: IPostPreview}) {
       {
         images?.length > 0 &&
             <div className="flex w-full overflow-hidden max-h-[288px]">
-              <ImageView images={images} size="large" />
+              <ImageView images={images} size="large" allowFullScreen />
             </div>
       }
     </div>

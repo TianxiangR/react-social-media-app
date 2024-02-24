@@ -7,6 +7,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import EditProfileDialogContent from '@/components/shared/EditProfileDialogContent';
 import IconButton from '@/components/shared/IconButton';
 import ImageView from '@/components/shared/ImageView';
 import Loader from '@/components/shared/Loader';
@@ -15,19 +16,29 @@ import PostPreview from '@/components/shared/PostPreview';
 import ReplyPostForm from '@/components/shared/ReplyPostForm';
 import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import UserLikes from '@/components/shared/UserLikes';
+import UserMedia from '@/components/shared/UserMedia';
 import UserPosts from '@/components/shared/UserPosts';
 import { Button } from '@/components/ui/button';
-import { useGetPostById, useGetPosts, useGetUserProfile } from '@/react-query/queriesAndMutations';
-import UserMedia from '@/components/shared/UserMedia';
+import { useUserContext } from '@/context/AuthContext';
+import { useGlobalContext } from '@/context/GlobalContext';
+import { useFollowUser, useGetUserProfile, useUnfollowUser } from '@/react-query/queriesAndMutations';
 
 function ProfilePage() {
   const { username = '' } = useParams();
   const {data: userInfo, isPending, isError} = useGetUserProfile(username);
+  const { user } = useUserContext();
   const navigate = useNavigate();
   const [currentTab, setCurrentTab] = useState('posts');
+  const { openDialog } = useGlobalContext().dialog;
+  const [isFollowing, setIsFollowing] = useState(userInfo?.is_following || false);
+  const {mutate: follow} = useFollowUser();
+  const {mutate: unfollow} = useUnfollowUser();
 
   const formateBirthday = (date: string) => {
-    const d = new Date(date);
+    const months = date.split('-')[1];
+    const day = date.split('-')[2];
+    const year = date.split('-')[0];
+    const d = new Date(Number(year), Number(months) - 1, Number(day));
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
       month: 'short',
@@ -57,6 +68,16 @@ function ProfilePage() {
     return formatedUrl;
   };
 
+  const handleFollowClick = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    if (isFollowing) {
+      unfollow(username, {onSuccess: () => setIsFollowing(false)});
+    } else {
+      follow(username, {onSuccess: () => setIsFollowing(true)});
+    }
+  };
+
+
   const renderPage = () => {
     if (isPending) {
       return (
@@ -69,7 +90,9 @@ function ProfilePage() {
     // no-op
     }
     else if (userInfo) {
-      console.log(userInfo);
+      const handleEditClick = () => {
+        openDialog(() => <EditProfileDialogContent {...userInfo}/>);
+      };
       return (
         <>
           <div className="h-[54px] top-0 border-[#eff3f4] border-b-[1px] z-10 sticky-bar flex items-center p-4 w-full">
@@ -80,15 +103,15 @@ function ProfilePage() {
             </div>
             <div className="flex flex-col justify-center">
               <h2 className="text-xl font-bold">{userInfo.name}</h2>
-              <span className="text-[#75828d] text-base">@{userInfo.username}</span>
+              <span className="text-[#75828d] text-sm">@{userInfo.username}</span>
             </div>
           </div>
           <div className="flex flex-col w-full">
             {/* header photo */}
-            <div className="bg-[#cfd9de] w-full h-[200px]">
+            <div className="bg-[#cfd9de] w-full aspect-[3/1]">
               {
-                userInfo.header_image &&
-                <img src={userInfo.header_image} alt="profile" className="w-full h-full object-cover"/>
+                userInfo.header_photo &&
+                <img src={userInfo.header_photo} alt="profile" className="w-full h-full object-cover"/>
               }
             </div>
 
@@ -100,11 +123,26 @@ function ProfilePage() {
                 <div className="p-1 bg-white rounded-full w-[133.5px] h-[133.5px] mt-[-14%]">
                   <img src={userInfo.profile_image} alt="avatar" className="w-full h-full rounded-full"/>
                 </div>
-                <div>
-                  <Button className="rounded-full" variant="outline">
-                    <span className="text-base font-bold text-[#303438]">Edit Profile</span>
-                  </Button>
-                </div>
+
+                { user?.id === userInfo.id ?
+                  <div>
+                    <Button className="rounded-full" variant="outline" onClick={handleEditClick}>
+                      <span className="text-base font-bold text-[#303438]">Edit Profile</span>
+                    </Button>
+                  </div> : userInfo.is_following ? (
+                    <div>
+                      <button className="bg-white rounded-full px-4 py-1 border-[#cfd9de] border-[1px] font-bold text-[#0f1419]"
+                        onClick={handleFollowClick}
+                      >Following</button>
+                    </div>
+                  ) : (
+                    <div>
+                      <button className="bg-black text-white rounded-full px-4 py-1 font-bold"
+                        onClick={handleFollowClick}
+                      >Follow</button>
+                    </div>
+                  )
+                }
               </div>
 
               {/* user info */}
@@ -130,10 +168,10 @@ function ProfilePage() {
                   </span>
                 }
 
-                {
-                  <a href={'https://www.linkedin.com/in/tianxiang-ren-7b1637239/'} className="inline-block mr-4 break-words max-w-full hover:underline text-blue">
+                { userInfo.website &&
+                  <a href={userInfo.website} className="inline-block mr-4 break-words max-w-full hover:underline text-blue" target="blank">
                     <LinkOutlinedIcon sx={{fontSize: '20px', color: '#536471', transform: 'rotate(-45deg)'}}/>
-                    <span>{formateUrl('https://www.linkedin.com/in/tianxiang-ren-7b1637239/')}</span>
+                    <span>{formateUrl(userInfo.website)}</span>
                   </a>
                 }
 
@@ -169,16 +207,16 @@ function ProfilePage() {
                 <Tab value="media" label="Media"/>
                 <Tab value="likes" label="Likes"/>
               </TabList>
-              <TabPanel value="posts" className="h-full">
+              <TabPanel value="posts" className="h-full pb-80">
                 <UserPosts username={userInfo.username} />
               </TabPanel>
-              <TabPanel value="replies" className="h-full">
+              <TabPanel value="replies" className="h-full pb-80">
                 <UserPosts username={userInfo.username} />
               </TabPanel>
-              <TabPanel value="media" className="h-full">
+              <TabPanel value="media" className="h-full pb-80">
                 <UserMedia username={userInfo.username} />
               </TabPanel>
-              <TabPanel value="likes" className="h-full">
+              <TabPanel value="likes" className="h-full pb-80">
                 <UserLikes username={userInfo.username} />
               </TabPanel>
             </TabContext>

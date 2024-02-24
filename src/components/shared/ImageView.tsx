@@ -2,6 +2,8 @@ import React from 'react';
 
 import { useGlobalContext } from '@/context/GlobalContext';
 
+import FullScreenImageView from './FullScreenImageView';
+
 export type ImageViewProps = {
   images?: string[];
   size?: 'medium' | 'large';
@@ -11,13 +13,13 @@ export type ImageViewProps = {
 
 function ImageView({images, size, rounded, allowFullScreen}: ImageViewProps) {
   const {openDialog} = useGlobalContext().dialog;
-  const openFullScreen = () => {
-    openDialog('view-image', images);
+  const openFullScreen = (index: number) => {
+    openDialog(() => <FullScreenImageView images={images || []} defaultIndex={index} />, {fullScreen: true});
   };
 
-  const handleClick = allowFullScreen ? (e: React.MouseEvent) => {
+  const handleClick = allowFullScreen ? (e: React.MouseEvent, index: number) => {
     e.stopPropagation();
-    openFullScreen();
+    openFullScreen(index);
   } : undefined;
 
   if (!images || images?.length === 0) {
@@ -35,7 +37,7 @@ function ImageView({images, size, rounded, allowFullScreen}: ImageViewProps) {
 
     return (
       <div className={defaultClassName}>
-        <img src={images[0]} alt="Image" className={imageClassName} onClick={handleClick} />
+        <img src={images[0]} alt="Image" className={imageClassName} onClick={(e) => handleClick?.(e, 0)} />
       </div>
     );
   }
@@ -50,7 +52,7 @@ function ImageView({images, size, rounded, allowFullScreen}: ImageViewProps) {
     return (
       <div className={`${baseClassName} grid grid-cols-2`}>
         {images.map((image, index) => (
-          <img key={index} src={image} alt="Image" className="w-full h-full object-cover" onClick={handleClick} />
+          <img key={index} src={image} alt="Image" className="w-full h-full object-cover" onClick={(e) => handleClick?.(e, index)} />
         ))}
       </div>
     );
@@ -60,13 +62,13 @@ function ImageView({images, size, rounded, allowFullScreen}: ImageViewProps) {
     return (
       <div className={`${baseClassName} grid grid-cols-2 grid-rows-2`}>
         <div className="row-span-2">
-          <img src={images[0]} alt="Image" className="w-full h-full object-cover" onClick={handleClick} />
+          <img src={images[0]} alt="Image" className="w-full h-full object-cover" onClick={(e) => handleClick?.(e, 0)} />
         </div>
         <div className="row-span-1">
-          <img src={images[1]} alt="Image" className="w-full h-full object-cover" onClick={handleClick} />
+          <img src={images[1]} alt="Image" className="w-full h-full object-cover" onClick={(e) => handleClick?.(e, 1)} />
         </div>
         <div className="row-span-1">
-          <img src={images[2]} alt="Image" className="w-full h-full object-cover" onClick={handleClick} />
+          <img src={images[2]} alt="Image" className="w-full h-full object-cover" onClick={(e) => handleClick?.(e, 2)} />
         </div>
       </div>
     );
@@ -75,16 +77,16 @@ function ImageView({images, size, rounded, allowFullScreen}: ImageViewProps) {
   return (
     <div className={`${baseClassName} grid grid-cols-2 grid-rows-2`}>
       <div className="row-span-1">
-        <img src={images[0]} alt="Image" className="w-full h-full object-cover" onClick={handleClick} />
+        <img src={images[0]} alt="Image" className="w-full h-full object-cover" onClick={(e) => handleClick?.(e, 0)} />
       </div>
       <div className="row-span-1">
-        <img src={images[1]} alt="Image" className="w-full h-full object-cover" onClick={handleClick} />
+        <img src={images[1]} alt="Image" className="w-full h-full object-cover" onClick={(e) => handleClick?.(e, 1)} />
       </div>
       <div className="row-span-1">
-        <img src={images[2]} alt="Image" className="w-full h-full object-cover" onClick={handleClick} />
+        <img src={images[2]} alt="Image" className="w-full h-full object-cover" onClick={(e) => handleClick?.(e, 2)} />
       </div>
       <div className="row-span-1">
-        <img src={images[3]} alt="Image" className="w-full h-full object-cover" onClick={handleClick} />
+        <img src={images[3]} alt="Image" className="w-full h-full object-cover" onClick={(e) => handleClick?.(e, 3)} />
       </div>
     </div>
   );

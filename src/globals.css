@@ -95,9 +95,26 @@
   .profile-image {
     @apply w-[40px] h-[40px] rounded-full;
   }
+
+  .post-list {
+    @apply flex flex-col divide-y-[1px] divide-[#eff3f4]
+  }
 }
 
 @layer components {
+  .black-icon-button {
+    @apply rounded-full;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .black-icon-button svg {
+    color: white;
+  }
+
+  .black-icon-button:hover {
+    background-color: rgba(0, 0, 0, 0.4);
+  }
+
   .round-button {
     @apply flex items-center justify-center rounded-full;
   }
@@ -126,17 +143,12 @@
   }
 
   .sticky-bar {
-    background-color: rgba(255, 255, 255, 0.85);
-    @apply sticky backdrop-blur-lg;
+    background-color: rgba(255, 255, 255, 0.9);
+    @apply sticky backdrop-blur-md;
   }
 
-  .text-box {
-    --max-lines: 10;
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: var(--max-lines);
-    white-space: pre-wrap;
+  .preview-text-box {
+    @apply whitespace-pre-wrap line-clamp-[10]
   }
 
   .block-list {
