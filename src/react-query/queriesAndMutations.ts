@@ -1,10 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { addBookmarkByPostId, createPost, deletePostById, followUser, getBookmarkedPosts,  getCurrentUser, getNotifications, getPostById, getPosts, likePost, queryLikesByUsername, queryMediaByUsername, queryPostsByUsername, queryUserByUsername, removeBookmarkByPostId,replyPostById, repostPostById, searchLatest, searchMedia,searchPeople, searchTop, signInUser, unfollowUser, unlikePost, updateProfile } from '@/apis';
+import { addBookmarkByPostId, createPost, createUser, deletePostById, followUser, getBookmarkedPosts,  getCurrentUser, getNotifications, getPostById, getPosts, likePost, queryLikesByUsername, queryMediaByUsername, queryPostsByUsername, queryUserByUsername, removeBookmarkByPostId,replyPostById, repostPostById, searchLatest, searchMedia,searchPeople, searchTop, signInUser, unfollowUser, unlikePost, updateProfile } from '@/apis';
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { AugmentedPostPreview, IPost, NewPost, Notification,SearchLatestResult, SearchPeopleResult, SearchTopResult, User, UserProfile } from '@/types';
 
 import { QUERY_KEYS } from './queryKeys';
+
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createUser,
+    onSuccess: (data) => {
+      localStorage.setItem(TOKEN_STORAGE_KEY, data.access);
+      queryClient.resetQueries();
+    }
+  });
+}
 
 export function useGetCurrentUser() {
   return useQuery({

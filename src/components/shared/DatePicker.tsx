@@ -45,7 +45,7 @@ function DatePicker({ value, onChange, start, end, className, ...props}: DatePic
 
   useEffect(() => {
     onChange?.(formDate());
-  }, []);
+  }, [selectedDay, selectedMonth, selectedYear]);
 
   const handleMonthChange = (value: string) => {
     setSelectedMonth(value);

@@ -1,10 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import React, {useEffect,useRef, useState} from 'react';
-import { set, useForm } from 'react-hook-form';
+import React, {useRef, useState} from 'react';
+import {  useForm } from 'react-hook-form';
 import { Link , useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
-import { createUser, signInUser } from '@/apis';
 import DatePicker from '@/components/shared/DatePicker';
 import ProfileImageSelector from '@/components/shared/ProfileImageSelector';
 import { Button } from '@/components/ui/button';
@@ -18,6 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { TOKEN_STORAGE_KEY } from '@/constants';
+import { useCreateUser } from '@/react-query/queriesAndMutations';
 import { signUpPart1Schema, signUpPart2Schema, signUpPart3Schema, signUpSchema } from '@/validations';
 
 function SignUp() {
@@ -33,6 +33,7 @@ function SignUp() {
     date_of_birth: '',
     profile_image: new File([], 'profile.png'),
   });
+  const {mutate: createUser} = useCreateUser();
 
   const form1 = useForm<z.infer<typeof signUpPart1Schema>>({
     resolver: zodResolver(signUpPart1Schema),
@@ -68,12 +69,10 @@ function SignUp() {
     setFormIndex((prev) => prev - 1);
   };
 
-  const handleSubmit = async (value: z.infer<typeof signUpPart3Schema>) => {
+  const handleSubmit = (value: z.infer<typeof signUpPart3Schema>) => {
     const data = {...formData, ...value};
     setFormData(data);
-    const token = await createUser(data);
-    window.localStorage.setItem(TOKEN_STORAGE_KEY, token?.access || '');
-    navigate('/home');
+    createUser(data, {onSuccess: () => navigate('/home')});
   };
   
   return (
