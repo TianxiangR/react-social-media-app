@@ -47,10 +47,10 @@ export function useCreatePost () {
       queryClient.setQueriesData({
         queryKey: [QUERY_KEYS.QUERY_POST_LIST],
       },
-      (oldData: string[] | undefined) => {
+      (oldData: AugmentedPostPreview[] | undefined) => {
         if (!oldData) return;
 
-        return [data.id, ...oldData];
+        return [data, ...oldData];
       });
 
       queryClient.setQueryData([QUERY_KEYS.GET_USER_MEDIA], (oldData: string[] | undefined) => {

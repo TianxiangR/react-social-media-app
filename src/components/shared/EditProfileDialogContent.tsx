@@ -231,9 +231,9 @@ function EditProfileDialogContent(props: User ) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name,
-      bio,
-      location,
-      website,
+      bio: bio || '',
+      location: location || '',
+      website: website || '',
       month: Number(date_of_birth.split('-')[1]),
       day: Number(date_of_birth.split('-')[2]),
       year: Number(date_of_birth.split('-')[0]),
