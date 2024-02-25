@@ -89,7 +89,7 @@
   }
 
   .full-screen {
-    @apply max-w-[100vw] max-h-[100vh] w-[100vw] h-[100vh];
+    @apply max-w-[100vw] max-h-screen w-screen h-screen;
   }
 
   .dialog {
@@ -97,7 +97,7 @@
   }
 
   .dialog-content {
-    @apply overflow-auto full-screen rounded-none lg:not-full-screen lg:rounded-lg relative bg-white;
+    @apply overflow-auto full-screen rounded-none md:not-full-screen md:rounded-lg relative bg-white;
   }
 
   .Dialog::backdrop {
