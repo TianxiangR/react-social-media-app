@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useMediaQuery } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
 
 import FollowPreview from '@/components/shared/FollowPreview';
 import LikePreview from '@/components/shared/LikePreview';
@@ -7,6 +8,7 @@ import PostPreview from '@/components/shared/PostPreview';
 import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
+import useHideOnScroll from '@/hooks/useHideOnScroll';
 import { useGetNotifications } from '@/react-query/queriesAndMutations';
 
 function NotificationsPage() {
@@ -14,6 +16,23 @@ function NotificationsPage() {
   const {data: notifications, isPending, isError} = useGetNotifications();
   const {user} = useUserContext();
   const {openDrawer} = useGlobalContext().drawer;
+  const shouldHide = useMediaQuery('(max-width: 768px)');
+  const fakeRef = useRef(null);
+  const ref = useRef(null);
+  const [scrollPos, setScrollPos] = useState(0);
+  useHideOnScroll(shouldHide ? ref : fakeRef, scrollPos);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollPos(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const renderNotifications = () => {
     if (isPending) {
@@ -62,7 +81,7 @@ function NotificationsPage() {
   return (
     <TabContext value={currentTab}>
       <div className='flex flex-col w-full'>
-        <div className='sticky-bar flex-col flex'>
+        <div className='sticky-bar flex-col flex' ref={ref}>
           <div className="flex flex-row justify-start px-4 py-2 gap-4 items-center h-12">
             <img src={user?.profile_image} alt="avatar" className="size-8 rounded-full inline-block md:hidden" onClick={openDrawer}/>
             <h2 className="text-xl font-bold">Notifications</h2>

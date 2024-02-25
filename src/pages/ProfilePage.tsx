@@ -4,7 +4,8 @@ import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined
 import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import React, { useEffect, useState } from 'react';
+import { useMediaQuery } from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import EditProfileDialogContent from '@/components/shared/EditProfileDialogContent';
@@ -21,6 +22,7 @@ import UserPosts from '@/components/shared/UserPosts';
 import { Button } from '@/components/ui/button';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
+import useHideOnScroll from '@/hooks/useHideOnScroll';
 import { useFollowUser, useGetUserProfile, useUnfollowUser } from '@/react-query/queriesAndMutations';
 
 function ProfilePage() {
@@ -33,6 +35,24 @@ function ProfilePage() {
   const [isFollowing, setIsFollowing] = useState(userInfo?.is_following || false);
   const {mutate: follow} = useFollowUser();
   const {mutate: unfollow} = useUnfollowUser();
+
+  const shouldHide = useMediaQuery('(max-width: 768px)');
+  const fakeRef = useRef(null);
+  const ref = useRef(null);
+  const [scrollPos, setScrollPos] = useState(0);
+  useHideOnScroll(shouldHide ? ref : fakeRef, scrollPos);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollPos(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const formateBirthday = (date: string) => {
     const months = date.split('-')[1];
@@ -95,7 +115,7 @@ function ProfilePage() {
       };
       return (
         <>
-          <div className="h-[54px] top-0 border-[#eff3f4] border-b-[1px] z-10 sticky-bar flex items-center p-4 w-full">
+          <div className="h-[54px] top-0 border-[#eff3f4] border-b-[1px] z-10 sticky-bar flex items-center p-4 w-full" ref={ref}>
             <div className="min-w-14">
               <IconButton className="text-xl" onClick={() => navigate(-1)}>
                 <ArrowBackIcon sx={{fontSize: '24px'}}/>

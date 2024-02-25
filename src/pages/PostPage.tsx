@@ -3,7 +3,8 @@ import DeleteForeverOutlinedIcon from '@mui/icons-material/DeleteForeverOutlined
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import PersonRemoveOutlinedIcon from '@mui/icons-material/PersonRemoveOutlined';
-import React, { useEffect } from 'react';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import IconButton from '@/components/shared/IconButton';
@@ -20,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useUserContext } from '@/context/AuthContext';
+import useHideOnScroll from '@/hooks/useHideOnScroll';
 import { useDeletePostById, useFollowUser, useGetPostById, useUnfollowUser } from '@/react-query/queriesAndMutations';
 
 function PostPage() {
@@ -29,6 +31,23 @@ function PostPage() {
   const { mutateAsync: deletePost } = useDeletePostById(postId);
   const { mutate: follow } = useFollowUser();
   const { mutate: unfollow } = useUnfollowUser();
+  const shouldHide = useMediaQuery('(max-width: 768px)');
+  const fakeRef = useRef(null);
+  const ref = useRef(null);
+  const [scrollPos, setScrollPos] = useState(0);
+  useHideOnScroll(shouldHide ? ref : fakeRef, scrollPos);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollPos(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   const { user } = useUserContext();
 
@@ -170,7 +189,7 @@ function PostPage() {
 
   return (
     <div className="h-full w-full">
-      <div className="h-14 top-0 border-[#eff3f4] border-b-[1px] z-10 sticky-bar flex items-center p-4">
+      <div className="h-14 top-0 border-[#eff3f4] border-b-[1px] z-10 sticky-bar flex items-center p-4" ref={ref}>
         <div className="min-w-14">
           <IconButton className="text-xl" onClick={() => navigate(-1)}>
             <ArrowBackIcon sx={{fontSize: '24px'}}/>

@@ -25,7 +25,14 @@ function BottomNavBar() {
   const navigate = useNavigate();
 
   return (
-    <div className='min-h-14 bg-white w-full px-4 flex'>
+    <div className='min-h-14 bg-white w-full px-4 flex relative'>
+      <Button 
+        onClick={() => openDialog(() => <PostDialogContent variant="create" />)} 
+        className='bg-blue rounded-full size-12 absolute right-3 top-[-0.75rem]'
+        style={{transform: 'translateY(-100%)'}}
+      >
+        <CreateOutlinedIcon sx={{fontSize: '28px'}} />
+      </Button>
       <ul className="flex w-full flex-row justify-between items-center">
         {/* Routes */}
         {routeConfig.map((route) => {

@@ -141,21 +141,24 @@ export const runMicroTask = (function(){
 })();
 
 export function formatDateString(dateString: string) {
+  const now = new Date();
+  const date = new Date(dateString);
+  if (now.getFullYear() !== date.getFullYear()){
+    const options: Intl.DateTimeFormatOptions = {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    };
+    return date.toLocaleDateString('en-US', options).replace(/\//g, '-');
+  }
+
   const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
     month: 'short',
     day: 'numeric',
   };
 
-  const date = new Date(dateString);
   const formattedDate = date.toLocaleDateString('en-US', options);
-
-  const time = date.toLocaleTimeString([], {
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-
-  return `${formattedDate} at ${time}`;
+  return formattedDate;
 }
 
 // 
@@ -173,16 +176,14 @@ export const multiFormatDateString = (timestamp: string = ''): string => {
   switch (true) {
   case Math.floor(diffInDays) >= 30:
     return formatDateString(timestamp);
-  case Math.floor(diffInDays) === 1:
-    return `${Math.floor(diffInDays)} day ago`;
-  case Math.floor(diffInDays) > 1 && diffInDays < 30:
-    return `${Math.floor(diffInDays)} days ago`;
+  case Math.floor(diffInDays) >= 1 && Math.floor(diffInDays) < 30:
+    return `${Math.floor(diffInDays)}d`;
   case Math.floor(diffInHours) >= 1:
-    return `${Math.floor(diffInHours)} hours ago`;
+    return `${Math.floor(diffInHours)}h`;
   case Math.floor(diffInMinutes) >= 1:
-    return `${Math.floor(diffInMinutes)} minutes ago`;
+    return `${Math.floor(diffInMinutes)}m`;
   default:
-    return 'Just now';
+    return 'now';
   }
 };
 

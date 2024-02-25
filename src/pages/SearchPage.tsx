@@ -1,6 +1,7 @@
 import SearchIcon from '@mui/icons-material/Search';
+import { useMediaQuery } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate,useSearchParams  } from 'react-router-dom';
 
 import Loader from '@/components/shared/Loader';
@@ -11,6 +12,7 @@ import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import UserPreview from '@/components/shared/UserPreview';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
+import useHideOnScroll from '@/hooks/useHideOnScroll';
 import { useSearchTop } from '@/react-query/queriesAndMutations';
 import { QUERY_KEYS } from '@/react-query/queryKeys';
 
@@ -23,7 +25,23 @@ function SearchPage() {
   const {user} = useUserContext();
   const {openDrawer} = useGlobalContext().drawer;
   const naivgate = useNavigate();
+  const shouldHide = useMediaQuery('(max-width: 768px)');
+  const fakeRef = useRef(null);
+  const ref = useRef(null);
+  const [scrollPos, setScrollPos] = useState(0);
+  useHideOnScroll(shouldHide ? ref : fakeRef, scrollPos);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollPos(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
   useEffect(() => {
     if (searchParams.get('q') === null || searchParams.get('q') === '') {
       naivgate('/explore');
@@ -140,7 +158,7 @@ function SearchPage() {
   return (
     <TabContext value={currentTab}>
       <div className="flex flex-col w-full post-list relative">
-        <div className="flex sticky-bar top-0 flex-col z-10">
+        <div className="flex sticky-bar top-0 flex-col z-10" ref={ref}>
           <div className="w-full px-4 pt-2 pb-1 flex gap-4 items-center">
             <img src={user?.profile_image} alt="" className="size-8 rounded-full inline-block md:hidden" onClick={openDrawer}/>
             <div className="flex flex-row flex-1 bg-[#eff3f4] px-4 py-2 

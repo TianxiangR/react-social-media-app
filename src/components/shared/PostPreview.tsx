@@ -62,11 +62,11 @@ function PostPreview(props: AugmentedPostPreview) {
         {/* Top row */}
         <div className="flex justify-between w-full h-fit">
           <div className='flex h-fit'>
-            <p>
-              <Link to={`/${author.username}`} onClick={(e) => e.stopPropagation()}><span className="font-bold text-base hover:underline">{author.name}</span></Link>
-              <span className="text-[#75828d] text-base ml-1">@{author.username}</span>
-              <span className="text-[#75828d] text-base ml-1">·</span>
-              <time className="text-[#75828d] text-base ml-1">{multiFormatDateString(created_at)}</time>
+            <p className='flex flex-row'>
+              <Link to={`/${author.username}`} onClick={(e) => e.stopPropagation()}><span className="font-bold text-base hover:underline truncate">{author.name}</span></Link>
+              <span className="text-[#75828d] text-base ml-1 truncate">@{author.username}</span>
+              <span className="text-[#75828d] text-base ml-1 flex-1">·</span>
+              <time className="text-[#75828d] text-base ml-1 flex-1">{multiFormatDateString(created_at)}</time>
             </p>
           </div>
 
