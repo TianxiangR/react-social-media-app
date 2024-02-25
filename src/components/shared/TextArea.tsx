@@ -5,13 +5,15 @@ import { cn } from '@/lib/utils';
 export type TextAreaProps = React.ComponentPropsWithRef<'textarea'>;
 
 const TextArea: React.FC<TextAreaProps> = React.forwardRef<HTMLTextAreaElement>(({className, onChange, ...props}: TextAreaProps, ref) => {
-  const defaultClassName = 'resize-none';
+  const defaultClassName = 'resize-none box-border';
 
   const resizeOnChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange?.(e);
     e.target.style.height = 'auto';
+    e.target.style.minHeight = 'auto';
     const { scrollHeight } = e.target;
     e.target.style.height = `${scrollHeight}px`;
+    e.target.style.minHeight = `${scrollHeight}px`;
   };
 
   return (

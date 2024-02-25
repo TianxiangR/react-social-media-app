@@ -1,6 +1,7 @@
 
 import CloseIcon from '@mui/icons-material/Close';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import { TextField } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 
 import { useUserContext } from '@/context/AuthContext';
@@ -106,23 +107,20 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
       >
         <img src={user?.profile_image} className="profile-image" />
         <div className="grow min-h-[100px] text-[20px] max-w-[510px] flex flex-col gap-4">
-          { 
-            <TextArea 
-              className="outline-none text-xl w-full" 
-              placeholder="What's happening?!" 
-              onChange={handleInputTextChange}
-              value={inputText}
-              rows={1}
-              ref={inputRef}
-            />
-          }
+          <TextArea 
+            className="outline-none text-xl w-full" 
+            placeholder="What's happening?!" 
+            onChange={handleInputTextChange}
+            value={inputText}
+            ref={inputRef}
+          />
           
           { imageUrls.length > 0 &&
             <Slides defaultPosition='end' slideCols={2} scrollCols={2}>
               {
                 imageUrls.map((url, index) => {
                   const baseClassName = 'object-center w-full rounded-2xl';
-                  const heightClassname = imageUrls.length === 1 ? 'object-cover max-h-[660px]' : 'object-cover h-[288px] max-h-[288px]';
+                  const heightClassname = imageUrls.length === 1 ? 'object-cover max-h-[660px] h-auto' : 'object-cover h-[288px] max-h-[288px]';
                   const className = `${baseClassName} ${heightClassname}`;
                   const removeImage = () => {
                     setImageUrls((prev) => prev.filter((_, i) => i !== index));

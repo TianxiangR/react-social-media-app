@@ -117,7 +117,7 @@ function Slides({children, defaultPosition='none', slideCols = 1, scrollCols = 1
   }, [scrollPosition]);
 
   return (
-    <div className="w-full max-w-full h-full max-h-full relative">
+    <div className="w-full max-w-full h-auto max-h-full relative">
       { showLeftArrow && 
               <Button
                 className="flex justify-center items-center w-fit rounded-full p-2 hover:bg-[#1d2124] hover:cursor-pointer bg-[#0b0f13] text-black absolute top-[45%] left-1 z-10"
