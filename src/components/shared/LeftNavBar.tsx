@@ -1,4 +1,5 @@
 
+import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import XIcon from '@mui/icons-material/X';
 import React, {  useState } from 'react';
@@ -36,12 +37,12 @@ function LeftNavBar() {
   };
 
   return (
-    <nav className="h-screen flex flex-col justify-between w-[260px]">
-      <ul className="flex w-full flex-col gap-3 pt-2 px-[8px]">
+    <nav className="h-screen flex flex-col justify-between w-[4rem] min-w-[4rem] lg:w-[260px] items-center lg:items-start">
+      <ul className="flex w-fit lg:w-full flex-col gap-3 pt-2 px-[8px] box-border">
         {/* Logo */}
-        <li>
+        <li className="flex w-fit">
           <Link to='/home' className="flex items-center gap-3 w-fit rounded-full p-2.5 hover:bg-[#e7e7e8]">
-            <XIcon sx={{fontSize: '24px'}}/>
+            <XIcon sx={{fontSize: '28px'}}/>
           </Link>
         </li>
 
@@ -54,10 +55,10 @@ function LeftNavBar() {
           const path = route.path === '/:username' ? `/${user?.username}` : route.path;
 
           return (
-            <li key={route.label} className="flex">
+            <li key={route.label} className="flex w-fit">
               <Link to={path} className="flex items-center gap-3 w-[auto] rounded-full p-2.5 hover:bg-[#e7e7e8] select-none">
                 <Icon sx={{fontSize: '28px'}}/>
-                <span className={`${isActive ? 'text-black font-bold' : 'text-[#0f1419]'} text-[20px] select-none`}>
+                <span className={`${isActive ? 'text-black font-bold' : 'text-[#0f1419]'} text-[20px] select-none hidden lg:flex`}>
                   {route.label}
                 </span>
               </Link>
@@ -65,9 +66,12 @@ function LeftNavBar() {
           );
         }
         )}
-        <li className="w-full pr-4 mt-4">
-          <Button className="w-full h-12 bg-blue rounded-full hover:bg-blue-100" onClick={handlePostClick}>
-            <span className="font-bold text-[18px]">Post</span>
+        <li className="w-fit lg:w-full">
+          <Button className="w-fit aspect-square lg:w-[233px] lg:aspect-auto h-12 bg-blue rounded-full hover:bg-blue-100" onClick={handlePostClick}>
+            <div className="flex lg:hidden">
+              <CreateOutlinedIcon sx={{fontSize: '24px'}}/>
+            </div>
+            <span className="font-bold text-[18px] hidden lg:inline">Post</span>
           </Button>
         </li>
       </ul>
@@ -75,16 +79,20 @@ function LeftNavBar() {
       {/* User */}
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <div className="w-full mb-3 px-2 hover:cursor-pointer">
-            <div className="w-full flex rounded-full hover:bg-[#e7e7e8] py-2 pl-3 pr-4 items-center justify-between">
-              <div className="flex gap-3 items-center">
-                <img src={user?.profile_image} className="profile-image" />
-                <div className="flex flex-col">
-                  <p className="text-[#0f1419] font-bold text-[16px]">{user?.name}</p>
-                  <p className="text-[#75828d] text-[16px]">@{user?.username}</p>
+          <div className="w-auto lg:w-full mb-3 hover:cursor-pointer min-w-fit">
+            <div className="w-full flex rounded-full hover:bg-[#e7e7e8] p-3 aspect-square lg:aspect-auto">
+              <div className="w-full flex justify-between">
+                <div className="flex gap-3 items-center">
+                  <img src={user?.profile_image} className="profile-image" />
+                  <div className="flex-col hidden lg:flex justify-between">
+                    <span className="text-[#0f1419] font-bold text-[14px]">{user?.name}</span>
+                    <span className="text-[#75828d] text-[14px]">@{user?.username}</span>
+                  </div>
+                </div>
+                <div className="hidden lg:flex justify-center items-center">
+                  <MoreHorizOutlinedIcon sx={{fontSize: '24px'}}/>
                 </div>
               </div>
-              <MoreHorizOutlinedIcon sx={{fontSize: '24px'}}/>
             </div>
           </div>
         </DropdownMenuTrigger>

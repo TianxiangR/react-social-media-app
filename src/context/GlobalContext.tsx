@@ -1,3 +1,4 @@
+import { Dialog, useMediaQuery, useTheme } from '@mui/material';
 import { type UseQueryResult } from '@tanstack/react-query';
 import React, { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { set } from 'zod';
@@ -41,6 +42,7 @@ function GlobalContextProvider({children}: {children: ReactNode}) {
   const [fullScreen, setFullScreen] = useState(false);
   const following_query_results = useGetPosts();
   const context = {...INITIAL_GLOBAL_STATE};
+  const responsiveFullScreen = useMediaQuery('@media (max-width:768px)');
   context.home.currentTab = homeTab;
   context.home.setCurrentTab = setHomeTab;
   context.home.following.queryResults = following_query_results;
@@ -59,9 +61,12 @@ function GlobalContextProvider({children}: {children: ReactNode}) {
   return (
     <GlobalContext.Provider value={context}>
       {children}
-      <CustomDialog open={open} fullScreen={fullScreen}>
+      <Dialog open={open} fullScreen={fullScreen || responsiveFullScreen}>
         {dialogRenderer()}
-      </CustomDialog>
+      </Dialog>
+      {/* <CustomDialog open={open} fullScreen={fullScreen}>
+        {dialogRenderer()}
+      </CustomDialog> */}
     </GlobalContext.Provider>
   );
 }

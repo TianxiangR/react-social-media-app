@@ -24,7 +24,6 @@ function CropImageDialogContent({ imageData, aspectRatio, onDone }: CropImageDia
 
   const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     const {width, height} = e.currentTarget;
-    console.log(width, height);
     const crop = makeAspectCrop(
       {
         unit: '%',
@@ -48,7 +47,7 @@ function CropImageDialogContent({ imageData, aspectRatio, onDone }: CropImageDia
   };
 
   return (
-    <div className="overflow-auto w-[600px] h-[800px] relative rounded-lg bg-white" style={{maxHeight: 'calc(100vh - 3rem - 6px)'}}>
+    <div className="overflow-auto w-[600px] h-[800px] relative rounded-lg bg-white">
       {/* Top Bar */}
       <div className="flex justify-between top-0 h-[53px] items-center sticky-bar px-2 z-50">
         <div className="flex jusitfy-start items-center">

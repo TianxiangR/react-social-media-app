@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import AddAPhotoOutlinedIcon from '@mui/icons-material/AddAPhotoOutlined';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
-import { Input, TextField } from '@mui/material';
+import { Dialog, Input, TextField, useMediaQuery } from '@mui/material';
 import { profile } from 'console';
 import React, {useEffect, useRef, useState} from 'react';
 import { type ControllerFieldState, type ControllerRenderProps, useForm, type UseFormStateReturn } from 'react-hook-form';
@@ -40,6 +40,7 @@ function HeaderPhotoFormItem({ header_photo, field }:  {
   const [openCropHeader, setOpenCropHeader] = useState(false);
   const [imageData, setImageData] = useState<string | null | undefined>(null);
   const [originalSrc, setOriginalSrc] = useState<string | null | undefined>(header_photo);
+
 
   const readDatafromFile = (file: File) => {
     const reader = new FileReader();
@@ -115,7 +116,7 @@ function HeaderPhotoFormItem({ header_photo, field }:  {
               </div>
             </div>
           </div>
-          <CustomDialog open={openCropHeader} >
+          <Dialog open={openCropHeader} >
             { field.value &&
             <CropImageDialogContent 
               imageData={imageData || ''}
@@ -123,7 +124,7 @@ function HeaderPhotoFormItem({ header_photo, field }:  {
               onDone={onDone}
             />
             }
-          </CustomDialog>
+          </Dialog>
         </div>
       </FormControl>
       <FormMessage />
@@ -172,6 +173,7 @@ function ProfileImageFormItem({ profile_image, field }:  {
   };
 
   const imageSrc = imageData || profile_image;
+  const diaglogFullScreen = useMediaQuery('@media (max-width:768px)');
 
   return (
     <FormItem>
@@ -204,7 +206,7 @@ function ProfileImageFormItem({ profile_image, field }:  {
               </button>
             </div>
           </div>
-          <CustomDialog open={openCropHeader} >
+          <CustomDialog open={openCropHeader} fullScreen={diaglogFullScreen}>
             { field.value &&
             <CropImageDialogContent 
               imageData={imageData || ''}
@@ -263,7 +265,7 @@ function EditProfileDialogContent(props: User ) {
   }
 
   return (
-    <div className="overflow-auto w-[600px] h-[600px] relative rounded-lg bg-white" style={{maxHeight: 'calc(100vh - 3rem - 6px)'}}>
+    <div className="overflow-auto w-full lg:w-[600px] lg:h-[600px] relative rounded-lg bg-white" style={{maxHeight: 'calc(100vh - 3rem - 6px)'}}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col">
           {/* Top Bar */}

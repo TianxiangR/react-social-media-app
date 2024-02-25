@@ -84,16 +84,28 @@
     @apply absolute flex items-center justify-center opacity-0 hover:opacity-80 w-full h-full bg-black rounded-full;
   }
 
-  .dialog {
-    @apply rounded-lg min-h-[55px];
+  .not-full-screen {
+    @apply max-w-[calc(100vw-3rem-6px)] h-fit w-[600px];
   }
 
-  .dialog::backdrop {
+  .full-screen {
+    @apply max-w-[100vw] max-h-[100vh] w-[100vw] h-[100vh];
+  }
+
+  .dialog {
+    @apply rounded-none lg:rounded-lg min-h-[55px] full-screen lg:not-full-screen;
+  }
+
+  .dialog-content {
+    @apply overflow-auto full-screen rounded-none lg:not-full-screen lg:rounded-lg relative bg-white;
+  }
+
+  .Dialog::backdrop {
     @apply bg-black opacity-50;
   }
 
   .profile-image {
-    @apply w-[40px] h-[40px] rounded-full;
+    @apply size-[40px] rounded-full aspect-square;
   }
 
   .post-list {

@@ -21,15 +21,17 @@ function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewPr
   const [slideIndex, setSlideIndex] = useState(defaultIndex);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+  const [isTouchScreen, setIsTouchScreen] = useState(navigator.maxTouchPoints > 0);
+
+  useEffect(() => {
+    setIsTouchScreen(navigator.maxTouchPoints > 0);
+  }, [navigator.maxTouchPoints]);
 
   useEffect(() => {
     const handleResize = () => {
       setScreenWidth(window.innerWidth);
     };
     window.addEventListener('resize', handleResize);
-
-    console.log(slideIndex);
-
     return () => {
       window.removeEventListener('resize', handleResize);
     };
@@ -51,7 +53,6 @@ function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewPr
     setIsDown(false);
     
     if (Math.abs(endX - startX) < 10) {
-      console.log('endX - startX < 10', endX - startX);
       closeDialog();
     }
 
@@ -99,19 +100,22 @@ function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewPr
     handleScrollEnd(e.clientX);
   };
 
-  const handleMousMove = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (!isDown) return;
-    const x = e.clientX;
-    const walk = (x - startX) * 5;
+  const handleMove = (x: number) => {
+    const walkMultiplier = isTouchScreen ? 1 : 5;
+    const walk = (x - startX) * walkMultiplier;
     const containerLength = containerRef.current?.clientWidth || 0;
     setOffset((prev) => Math.min(containerLength - window.innerWidth, Math.max(0, startOffset - walk)));
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleMousMove = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    if (!isDown) return;
+    handleMove(e.clientX);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
     setStartX(e.touches[0].clientX);
     setStartOffset(offset);
     setIsDown(true);
@@ -119,23 +123,18 @@ function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewPr
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     e.stopPropagation();
-    e.preventDefault();
     handleScrollEnd(e.changedTouches[0].clientX);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     e.stopPropagation();
-    e.preventDefault();
     if (!isDown) return;
     const x = e.touches[0].clientX;
-    const walk = (x - startX) * 5;
-    const containerLength = containerRef.current?.clientWidth || 0;
-    setOffset((prev) => Math.min(containerLength - window.innerWidth, Math.max(0, startOffset - walk)));
+    handleMove(x);
   };
 
   const handleTouchCancel = (e: React.TouchEvent) => {
     e.stopPropagation();
-    e.preventDefault();
     handleScrollEnd(e.changedTouches[0].clientX);
   };
 
@@ -158,7 +157,7 @@ function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewPr
   };
 
   return (
-    <div className="w-screen h-screen max-w-[100vw] max-h-screen" style={{background: 'rgba(0, 0, 0, 90%)'}}>
+    <div className="w-screen h-screen max-w-[100vw] max-h-screen overflow-hidden" style={{background: 'rgba(0, 0, 0, 90%)'}}>
       <Button
         className="flex justify-center items-center w-fit rounded-full aspect-square border-white border-2 p-2 hover:bg-[#1d2124] hover:cursor-pointer bg-black text-black absolute top-10 left-10 z-10"
         onClick={closeDialog}
@@ -166,7 +165,7 @@ function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewPr
         <CloseIcon sx={{color: 'white'}}/>
       </Button>
 
-      { offset > 0 &&
+      { offset > 0 && !isTouchScreen &&
         <Button
           className="flex justify-center items-center w-fit rounded-full aspect-square border-white border-2 p-2 hover:bg-[#1d2124] hover:cursor-pointer bg-black text-black absolute top-[45%] left-10 z-10"
           onClick={moveLeft}
@@ -175,7 +174,7 @@ function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewPr
         </Button>
       }
 
-      { offset < (images.length - 1) * window.innerWidth &&
+      { offset < (images.length - 1) * window.innerWidth && !isTouchScreen &&
         <Button
           className="flex justify-center items-center w-fit rounded-full aspect-square border-white border-2 p-2 hover:bg-[#1d2124] hover:cursor-pointer bg-black text-black absolute top-[45%] right-10 z-10"
           onClick={moveRight}
@@ -209,11 +208,11 @@ function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewPr
                   minWidth: 'calc(100vw)',
                 }}
               >
-                <div className="absolute top-[50%] left-[50%]" style={{transform: 'translate(-50%, -50%)'}}>
+                <div className="absolute top-[50%] left-[50%] flex justify-center items-center w-full h-full" style={{transform: 'translate(-50%, -50%)'}}>
                   <img 
                     src={url} 
                     alt="Image"
-                    className="object-contain object-center max-h-screen max-w-screen h-auto"
+                    className="object-contain object-center max-h-screen max-w-screen h-auto min-h-[50%] min-w-[80%]"
                   />
                 </div>
               </div>
