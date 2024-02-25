@@ -8,7 +8,7 @@ export interface IconButtonProps extends React.ButtonHTMLAttributes<HTMLButtonEl
 
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
   ({children, className, ...props}, ref) => {
-    const newClassName = cn('rounded-full w-fit h-auto aspect-square bg-opacity-0 hover:bg-opacity-20 icon-button relative flex justify-center items-center disabled:opacity-50', className);
+    const newClassName = cn('rounded-full w-fit aspect-square h-fit bg-opacity-0 hover:bg-opacity-20 icon-button relative flex justify-center items-center disabled:opacity-50', className);
 
     const {disabled} = props;
 

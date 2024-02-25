@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React from 'react';
 import { Outlet} from 'react-router-dom';
 
 import { AuthProvider } from '@/context/AuthContext';
-import GlobalContextProvider, { useGlobalContext } from '@/context/GlobalContext';
-import { runMicroTask } from '@/lib/utils';
+import GlobalContextProvider from '@/context/GlobalContext';
 
 import LeftNavBar from './LeftNavBar';
 

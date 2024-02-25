@@ -67,7 +67,7 @@ function LeftNavBar() {
         }
         )}
         <li className="w-fit lg:w-full">
-          <Button className="w-fit aspect-square lg:w-[233px] lg:aspect-auto h-12 bg-blue rounded-full hover:bg-blue-100" onClick={handlePostClick}>
+          <Button className="w-fit size-12 lg:w-[233px] bg-blue rounded-full hover:bg-blue-100" onClick={handlePostClick}>
             <div className="flex lg:hidden">
               <CreateOutlinedIcon sx={{fontSize: '24px'}}/>
             </div>
