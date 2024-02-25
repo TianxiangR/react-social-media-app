@@ -1,4 +1,4 @@
-import { Dialog, useMediaQuery, useTheme } from '@mui/material';
+import { Dialog, Drawer, useMediaQuery, useTheme } from '@mui/material';
 import { type UseQueryResult } from '@tanstack/react-query';
 import React, { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { set } from 'zod';
@@ -6,6 +6,7 @@ import { set } from 'zod';
 import PostDialogContent from '@/components/shared/CreatePostDialogContent';
 import CustomDialog from '@/components/shared/CustomDialog';
 import FullScreenImageView from '@/components/shared/FullScreenImageView';
+import LeftDrawer from '@/components/shared/LeftDrawer';
 import { runMicroTask } from '@/lib/utils';
 import { useGetPosts } from '@/react-query/queriesAndMutations';
 import { DialogType, GlobalState, HomeTab, IPostPreview, ProfileTab } from '@/types';
@@ -28,6 +29,10 @@ const INITIAL_GLOBAL_STATE: GlobalState = {
   dialog: {
     openDialog: () => {},
     closeDialog: () => {},
+  },
+  drawer: {
+    openDrawer: () => {},
+    closeDrawer: () => {},
   }
 };
 
@@ -36,7 +41,8 @@ const GlobalContext = createContext(INITIAL_GLOBAL_STATE);
 function GlobalContextProvider({children}: {children: ReactNode}) {
   const [homeTab, setHomeTab] = useState<HomeTab>('for-you');
   const [profileTab, setProfileTab] = useState<ProfileTab>('posts');
-  const [open, setOpen] = useState(false);
+  const [openDialog, setOpen] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState(false);
   const emptyRenderer = () => <></>;
   const [dialogRenderer, setDialogRenderer] = useState<() => ReactNode>(() => emptyRenderer);
   const [fullScreen, setFullScreen] = useState(false);
@@ -57,16 +63,18 @@ function GlobalContextProvider({children}: {children: ReactNode}) {
     setOpen(false);
     setDialogRenderer(() => emptyRenderer);
   };
+  context.drawer.openDrawer = () => setOpenDrawer(true);
+  context.drawer.closeDrawer = () => setOpenDrawer(false);
 
   return (
     <GlobalContext.Provider value={context}>
       {children}
-      <Dialog open={open} fullScreen={fullScreen || responsiveFullScreen}>
+      <Dialog open={openDialog} fullScreen={fullScreen || responsiveFullScreen}>
         {dialogRenderer()}
       </Dialog>
-      {/* <CustomDialog open={open} fullScreen={fullScreen}>
-        {dialogRenderer()}
-      </CustomDialog> */}
+      <Drawer open={openDrawer} onClose={() => setOpenDrawer(false)}>
+        <LeftDrawer />
+      </Drawer>
     </GlobalContext.Provider>
   );
 }

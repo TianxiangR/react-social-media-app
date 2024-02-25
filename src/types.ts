@@ -90,6 +90,10 @@ export type GlobalState = {
     openDialog: (contentRenderer: () => React.ReactNode, options?: {fullScreen?: boolean}) => void;
     closeDialog: () => void;
   }
+  drawer: {
+    openDrawer: () => void;
+    closeDrawer: () => void;
+  }
 };
 
 export type HomeTab = GlobalState['home']['currentTab'];

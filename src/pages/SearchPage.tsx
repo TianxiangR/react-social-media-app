@@ -9,6 +9,8 @@ import SearchLatest from '@/components/shared/SearchLatest';
 import SearchMedia from '@/components/shared/SearchMedia';
 import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import UserPreview from '@/components/shared/UserPreview';
+import { useUserContext } from '@/context/AuthContext';
+import { useGlobalContext } from '@/context/GlobalContext';
 import { useSearchTop } from '@/react-query/queriesAndMutations';
 import { QUERY_KEYS } from '@/react-query/queryKeys';
 
@@ -18,6 +20,8 @@ function SearchPage() {
   const {data: searchResults, isFetching, isError} = useSearchTop(searchParams.get('q') || '');
   const [currentTab, setCurrentTab] = useState('top');
   const queryClient = useQueryClient();
+  const {user} = useUserContext();
+  const {openDrawer} = useGlobalContext().drawer;
   const naivgate = useNavigate();
 
   useEffect(() => {
@@ -137,7 +141,8 @@ function SearchPage() {
     <TabContext value={currentTab}>
       <div className="flex flex-col w-full post-list relative">
         <div className="flex sticky-bar top-0 flex-col z-10">
-          <div className="w-full px-4 pt-2 pb-1">
+          <div className="w-full px-4 pt-2 pb-1 flex gap-4 items-center">
+            <img src={user?.profile_image} alt="" className="size-8 rounded-full inline-block md:hidden" onClick={openDrawer}/>
             <div className="flex flex-row flex-1 bg-[#eff3f4] px-4 py-2 
             rounded-full items-center h-[42px] gap-4 border-[1px] has-[:focus]:bg-transparent
              has-[:focus]:border-blue has-[:focus]:text-blue">

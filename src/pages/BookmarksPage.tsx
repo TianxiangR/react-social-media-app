@@ -1,5 +1,8 @@
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
+import IconButton from '@/components/shared/IconButton';
 import Loader from '@/components/shared/Loader';
 import PostPreview from '@/components/shared/PostPreview';
 import { useUserContext } from '@/context/AuthContext';
@@ -8,6 +11,7 @@ import { useGetBookmarkedPosts } from '@/react-query/queriesAndMutations';
 function BookmarksPage() {
   const { user } = useUserContext();
   const { data: posts, isPending, isError } = useGetBookmarkedPosts();
+  const navigate = useNavigate();
 
   const renderPosts = () => {
     if (isPending) {
@@ -38,7 +42,12 @@ function BookmarksPage() {
 
   return (
     <div className="flex flex-col w-full relative">
-      <div className="flex sticky-bar px-4 py-2">
+      <div className="flex sticky-bar px-4 py-2 gap-5 items-center h-[53px]">
+        <div className='block md:hidden'>
+          <IconButton className="text-xl" onClick={() => navigate(-1)}>
+            <ArrowBackIcon sx={{fontSize: '24px'}}/>
+          </IconButton>
+        </div>
         <div className="flex flex-col">
           <h2 className="text-xl font-bold">Bookmarks</h2>
           <span className="text-sm text-[#536471]">{`@${user?.username}`}</span>

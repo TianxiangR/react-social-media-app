@@ -120,8 +120,8 @@ function ProfilePage() {
 
               {/* profile image */}
               <div className="flex w-full justify-between">
-                <div className="p-1 bg-white rounded-full w-[133.5px] h-[133.5px] mt-[-14%]">
-                  <img src={userInfo.profile_image} alt="avatar" className="w-full h-full rounded-full"/>
+                <div className="p-1 bg-white rounded-full aspect-square w-[25%] mt-[-15%] overflow-hidden">
+                  <img src={userInfo.profile_image} alt="avatar" className="w-full aspect-square rounded-full object-contain"/>
                 </div>
 
                 { user?.id === userInfo.id ?
