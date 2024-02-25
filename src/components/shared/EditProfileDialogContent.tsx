@@ -78,6 +78,7 @@ function HeaderPhotoFormItem({ header_photo, field }:  {
   };
 
   const imageSrc = imageData || originalSrc;
+  const diaglogFullScreen = useMediaQuery('@media (max-width:768px)');
 
   return (
     <FormItem>
@@ -116,7 +117,7 @@ function HeaderPhotoFormItem({ header_photo, field }:  {
               </div>
             </div>
           </div>
-          <Dialog open={openCropHeader} >
+          <Dialog open={openCropHeader} fullScreen={diaglogFullScreen}>
             { field.value &&
             <CropImageDialogContent 
               imageData={imageData || ''}
@@ -206,7 +207,7 @@ function ProfileImageFormItem({ profile_image, field }:  {
               </button>
             </div>
           </div>
-          <CustomDialog open={openCropHeader} fullScreen={diaglogFullScreen}>
+          <Dialog open={openCropHeader} fullScreen={diaglogFullScreen}>
             { field.value &&
             <CropImageDialogContent 
               imageData={imageData || ''}
@@ -214,7 +215,7 @@ function ProfileImageFormItem({ profile_image, field }:  {
               onDone={onDone}
             />
             }
-          </CustomDialog>
+          </Dialog>
         </div>
       </FormControl>
       <FormMessage />

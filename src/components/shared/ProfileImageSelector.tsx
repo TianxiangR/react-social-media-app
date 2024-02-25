@@ -4,21 +4,15 @@ import './ReactCrop.css';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import { Dialog, useMediaQuery } from '@mui/material';
 import React, {useCallback, useEffect,useRef,useState} from 'react';
 import {FileWithPath, useDropzone} from 'react-dropzone';
 import ReactCrop, { centerCrop, convertToPixelCrop,type Crop, makeAspectCrop, type PercentCrop, type PixelCrop } from 'react-image-crop';
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { base64StringtoFile, extractImageFileExtensionFromBase64, image64ToCanvasRef, setCanvasPreview } from '@/lib/utils';
 
 import { Button } from '../ui/button';
+import CropImageDialogContent from './CropImageDialogContent';
 import ImageCropper from './ImageCropper';
 
 export type ProfileImageSelectorProps = {
@@ -31,7 +25,8 @@ function ProfileImageSelector({onChange, src}: ProfileImageSelectorProps) {
   const [crop, setCrop] = useState<PercentCrop>();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
+  const fullScreen = useMediaQuery('(max-width: 768px)');
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
     const newFile = acceptedFiles[0];
@@ -40,7 +35,7 @@ function ProfileImageSelector({onChange, src}: ProfileImageSelectorProps) {
       setImageData(reader.result as string);
     };
     reader.readAsDataURL(newFile);
-    dialogRef.current?.showModal();
+    setOpen(true);
   }, [imageData]);
 
   const {getRootProps, getInputProps} = useDropzone({
@@ -75,13 +70,9 @@ function ProfileImageSelector({onChange, src}: ProfileImageSelectorProps) {
     setCrop(centeredCrop);
   };
 
-  const handleApply = () => {
-    if (!imageRef.current || !canvasRef.current || !crop) {
-      return;
-    }
-    image64ToCanvasRef(canvasRef.current, imageData || '', convertToPixelCrop(crop, imageRef.current.naturalWidth, imageRef.current.naturalHeight ));
-    handleOnChange(canvasRef.current.toDataURL());
-    dialogRef.current?.close();
+  const handleApply = (data: string) => {
+    setImageData(data);
+    setOpen(false);
   };
 
   return (
@@ -105,30 +96,13 @@ function ProfileImageSelector({onChange, src}: ProfileImageSelectorProps) {
           </div>
         )}
       </div>
-      <dialog ref={dialogRef} className="dialog w-[600px] px-6 py-4 ">
-        <div className="relative w-full h-full flex flex-col">
-          <div className='flex flex-col gap-4 mt-[50px]'>
-            <header className="mt-0">
-              <h1 className="text-2xl font-bold">Crop Image</h1>
-              <p>Crop the image to fit the profile image</p>
-            </header>
-            <div className="my-6">
-              <div className="w-full max-h-[500px] flex flex-col justify-center items-center">
-                <ReactCrop
-                  crop={crop}
-                  aspect={1}
-                  circularCrop
-                  keepSelection
-                  onChange={(_, crop) => {setCrop(crop);}}
-                > 
-                  <img src={imageData || ''} onLoad={handleImageLoad} className="object-contain" ref={imageRef}/>
-                </ReactCrop>
-                <Button type="button" className="mt-4 w-full" onClick={handleApply}>Apply</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </dialog>
+      <Dialog open={open} fullScreen={fullScreen}>
+        <CropImageDialogContent 
+          imageData={imageData || ''}
+          aspectRatio={1/1}
+          onDone={handleApply}
+        />
+      </Dialog>
     </div>
   );
 }

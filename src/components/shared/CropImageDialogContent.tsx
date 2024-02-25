@@ -47,7 +47,7 @@ function CropImageDialogContent({ imageData, aspectRatio, onDone }: CropImageDia
   };
 
   return (
-    <div className="overflow-auto w-[600px] h-[800px] relative rounded-lg bg-white">
+    <div className="overflow-auto w-full h-full md:w-[600px] md:h-[800px] relative rounded-lg bg-white">
       {/* Top Bar */}
       <div className="flex justify-between top-0 h-[53px] items-center sticky-bar px-2 z-50">
         <div className="flex jusitfy-start items-center">
@@ -58,13 +58,13 @@ function CropImageDialogContent({ imageData, aspectRatio, onDone }: CropImageDia
           >
             <ArrowBackIcon />
           </Button>
-          <span className="text-lg font-bold ml-2">Edit Profile</span>
+          <span className="text-lg font-bold ml-2">Crop Image</span>
         </div>
         <Button className="rounded-full text-sm text-white" type="button"
           onClick={handleDone}
         >Apply</Button>
       </div>
-      <div className="w-full max-h-[500px] flex flex-col justify-center items-center">
+      <div className="w-full max-h-[500px] flex flex-col justify-center items-center px-5">
         <ReactCrop
           crop={crop}
           aspect={aspectRatio}
