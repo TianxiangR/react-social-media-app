@@ -113,20 +113,18 @@ function PostPreview(props: AugmentedPostPreview) {
         </div>
 
         {/* Content */}
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <div className="preview-text-box">
             {content}
           </div>
 
-          <div className="flex flex-col mt-2">
-            <div className="flex" style={{display: images?.length > 0 ? 'flex' : 'none'}}>
-              <ImageView images={images} rounded allowFullScreen/>
-            </div>
-            {
-              repost_parent && 
-              <QuotedPost post={repost_parent} />
-            }
+          <div className="flex" style={{display: images?.length > 0 ? 'flex' : 'none'}}>
+            <ImageView images={images} rounded allowFullScreen/>
           </div>
+          {
+            repost_parent && 
+              <QuotedPost post={repost_parent} />
+          }
         </div>
 
         {/* Bottom row */}
