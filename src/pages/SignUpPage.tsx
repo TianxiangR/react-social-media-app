@@ -117,7 +117,7 @@ function SignUp() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Display Name</FormLabel>
                       <FormControl>
                         <Input type="text" {...field} />
                       </FormControl>
