@@ -1,7 +1,7 @@
 import { InfiniteData, QueryFunction, QueryFunctionContext, QueryKey, useInfiniteQuery,useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
-import { addBookmarkByPostId, createPost, createUser, deletePostById, followUser, getBookmarkedPosts,  getCurrentUser, getNotifications, getPostById, getPosts, likePost, queryLikesByUsername, queryMediaByUsername, queryPostsByUsername, queryUserByUsername, removeBookmarkByPostId,replyPostById, repostPostById, searchLatest, searchMedia,searchPeople, searchTop, signInUser, unfollowUser, unlikePost, updateProfile } from '@/apis';
+import { addBookmarkByPostId, createPost, createUser, deletePostById, followUser, getBookmarkedPosts,  getCurrentUser, getNotifications, getPostById, getPosts, getTopRatedPosts, likePost, queryLikesByUsername, queryMediaByUsername, queryPostsByUsername, queryUserByUsername, removeBookmarkByPostId,replyPostById, repostPostById, searchLatest, searchMedia,searchPeople, searchTop, signInUser, unfollowUser, unlikePost, updateProfile } from '@/apis';
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { AugmentedPostPreview, IPost, NewPost, Notification,Page,SearchLatestResult, SearchPeopleResult, SearchTopResult, User, UserProfile } from '@/types';
 
@@ -950,5 +950,20 @@ export function useGetNotifications() {
   return useQuery({
     queryKey: [QUERY_KEYS.GET_NOTIFICATIONS],
     queryFn: getNotifications,
+  });
+}
+
+export function useGetTopRatedPosts() {
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
+    queryKey: [QUERY_KEYS.GET_TOP_RATED_POSTS],
+    queryFn: ({pageParam}) => getTopRatedPosts(timestamp, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+      return undefined;
+    },
   });
 }

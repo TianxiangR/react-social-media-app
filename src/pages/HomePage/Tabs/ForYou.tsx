@@ -4,15 +4,13 @@ import { useInView } from 'react-intersection-observer';
 import CreatePostForm from '@/components/shared/CreatePostForm';
 import PostPreview from '@/components/shared/PostPreview';
 import { useGlobalContext } from '@/context/GlobalContext';
-import { useGetPosts } from '@/react-query/queriesAndMutations';
-import { AugmentedPostPreview } from '@/types';
 
-import Loader from './Loader';
+import Loader from '../../../components/shared/Loader';
 
 
-function FollowingPosts() {
+function ForYouPosts() {
   const globalContext = useGlobalContext();
-  const { data: response, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = globalContext.home.following.queryResults;
+  const { data: response, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = globalContext.home.for_you.queryResults;
   const [ref, inView] = useInView();
 
   useEffect(() => {
@@ -66,4 +64,4 @@ function FollowingPosts() {
   );
 }
 
-export default FollowingPosts;
+export default ForYouPosts;

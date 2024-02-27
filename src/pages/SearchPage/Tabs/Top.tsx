@@ -10,8 +10,8 @@ import { useSearchPeople, useSearchTop } from '@/react-query/queriesAndMutations
 
 function Top({setCurrentTab}: {setCurrentTab: (tab: string) => void}){
   const [searchParams] = useSearchParams();
-  const {data: postData, isFetching: isFetchingPosts, isError: isErrorPosts, fetchNextPage} = useSearchTop(searchParams.get('q') || '');
-  const {data: peopleData, isFetching: isFetchingPeople, isError: isErrorPeople} = useSearchPeople(searchParams.get('q') || '');
+  const {data: postData, isPending: isPendingPosts, isError: isErrorPosts, fetchNextPage, isFetchingNextPage} = useSearchTop(searchParams.get('q') || '');
+  const {data: peopleData, isPending: isPendingPeople, isError: isErrorPeople} = useSearchPeople(searchParams.get('q') || '');
   const { ref, inView } = useInView();
 
 
@@ -22,7 +22,7 @@ function Top({setCurrentTab}: {setCurrentTab: (tab: string) => void}){
   }, [inView]);
   
   const renderTop = () => {
-    if ((isFetchingPosts || isFetchingPeople) && (!postData || !peopleData)) {
+    if ((isPendingPosts || isPendingPeople) && (!postData || !peopleData)) {
       return (
         <div className="mt-10">
           <Loader />
@@ -80,6 +80,13 @@ function Top({setCurrentTab}: {setCurrentTab: (tab: string) => void}){
                         </li>
                       );
                     })
+                  }
+                  {
+                    isFetchingNextPage && (
+                      <li className="w-full">
+                        <Loader />
+                      </li>
+                    )
                   }
                 </ul>
               </div>

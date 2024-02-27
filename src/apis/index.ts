@@ -508,3 +508,25 @@ export async function getNotifications(): Promise<Notification[]> {
   const data = await response.json();
   return data;
 }
+
+export async function getTopRatedPosts(timestamp: number, page: number): Promise<Page<AugmentedPostPreview>> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const searchParams = new URLSearchParams({
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
+
+  const response = await fetch(`${baseUrl}/api/top-rated/?${searchParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+
+  return data;
+}

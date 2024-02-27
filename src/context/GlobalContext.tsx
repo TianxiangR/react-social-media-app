@@ -8,7 +8,7 @@ import CustomDialog from '@/components/shared/CustomDialog';
 import FullScreenImageView from '@/components/shared/FullScreenImageView';
 import LeftDrawer from '@/components/shared/LeftDrawer';
 import { runMicroTask } from '@/lib/utils';
-import { useGetPosts } from '@/react-query/queriesAndMutations';
+import { useGetPosts, useGetTopRatedPosts } from '@/react-query/queriesAndMutations';
 import { AugmentedPostPreview, DialogType, GlobalState, HomeTab, IPostPreview, Page, ProfileTab } from '@/types';
 
 const INITIAL_GLOBAL_STATE: GlobalState = {
@@ -16,7 +16,7 @@ const INITIAL_GLOBAL_STATE: GlobalState = {
     currentTab: 'for-you',
     setCurrentTab: () => {},
     for_you: {
-      queryResults: {} as UseQueryResult<IPostPreview[] | undefined, Error>,
+      queryResults: {} as UseInfiniteQueryResult<InfiniteData<Page<AugmentedPostPreview>, unknown>, Error>,
     },
     following: {
       queryResults: {} as UseInfiniteQueryResult<InfiniteData<Page<AugmentedPostPreview>, unknown>, Error>,
@@ -47,11 +47,13 @@ function GlobalContextProvider({children}: {children: ReactNode}) {
   const [dialogRenderer, setDialogRenderer] = useState<() => ReactNode>(() => emptyRenderer);
   const [fullScreen, setFullScreen] = useState(false);
   const following_query_results = useGetPosts();
+  const for_you_query_results = useGetTopRatedPosts();
   const context = {...INITIAL_GLOBAL_STATE};
   const responsiveFullScreen = useMediaQuery('@media (max-width:768px)');
   context.home.currentTab = homeTab;
   context.home.setCurrentTab = setHomeTab;
   context.home.following.queryResults = following_query_results;
+  context.home.for_you.queryResults = for_you_query_results;
   context.profile.currentTab = profileTab;
   context.profile.setCurrentTab = setProfileTab;
   context.dialog.openDialog = (renderer: () => ReactNode, options) => {

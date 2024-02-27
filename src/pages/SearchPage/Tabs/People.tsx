@@ -8,7 +8,7 @@ import { useSearchPeople } from '@/react-query/queriesAndMutations';
 
 function People() {
   const [searchParams] = useSearchParams();
-  const {data, isFetching, isError, fetchNextPage} = useSearchPeople(searchParams.get('q') || '');
+  const {data, isPending, isError, fetchNextPage, isFetchingNextPage} = useSearchPeople(searchParams.get('q') || '');
   const { ref, inView} = useInView();
 
   useEffect(() => {
@@ -18,7 +18,7 @@ function People() {
   }, [inView]);
 
   const renderPeople = () => {
-    if (isFetching) {
+    if (isPending) {
       return (
         <div className="mt-10">
           <Loader />
@@ -53,6 +53,14 @@ function People() {
                 </li>
               );
             })
+          }
+          {
+            isFetchingNextPage && (
+              <div className="mt-10">
+                <Loader />
+              </div>
+            )
+          
           }
         </ul>
       );
