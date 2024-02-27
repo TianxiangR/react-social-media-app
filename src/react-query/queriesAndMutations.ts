@@ -1,8 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { InfiniteData, QueryFunction, QueryFunctionContext, QueryKey, useInfiniteQuery,useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
 import { addBookmarkByPostId, createPost, createUser, deletePostById, followUser, getBookmarkedPosts,  getCurrentUser, getNotifications, getPostById, getPosts, likePost, queryLikesByUsername, queryMediaByUsername, queryPostsByUsername, queryUserByUsername, removeBookmarkByPostId,replyPostById, repostPostById, searchLatest, searchMedia,searchPeople, searchTop, signInUser, unfollowUser, unlikePost, updateProfile } from '@/apis';
 import { TOKEN_STORAGE_KEY } from '@/constants';
-import { AugmentedPostPreview, IPost, NewPost, Notification,SearchLatestResult, SearchPeopleResult, SearchTopResult, User, UserProfile } from '@/types';
+import { AugmentedPostPreview, IPost, NewPost, Notification,Page,SearchLatestResult, SearchPeopleResult, SearchTopResult, User, UserProfile } from '@/types';
 
 import { QUERY_KEYS } from './queryKeys';
 
@@ -74,9 +75,18 @@ export function useCreatePost () {
 }
 
 export function useGetPosts () {
-  return useQuery({
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_RECENT_POSTS],
-    queryFn: getPosts,
+    queryFn: ({pageParam}) => getPosts(pageParam, timestamp),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+
+      return undefined;
+    },
+    initialPageParam: 1,
   });
 }
 
@@ -424,23 +434,50 @@ export function useGetUserProfile(username: string) {
 }
 
 export function useGetUserPosts(username: string) {
-  return useQuery({
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS],
-    queryFn: () => queryPostsByUsername(username),
+    queryFn: ({pageParam}) => queryPostsByUsername(username, timestamp, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+
+      return undefined;
+    },
   });
 }
 
 export function useGetUserLikes(username: string) {
-  return useQuery({
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_LIKES],
-    queryFn: () => queryLikesByUsername(username),
+    queryFn: ({pageParam}) => queryLikesByUsername(username, timestamp, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+
+      return undefined;
+    },
   });
 }
 
 export function useGetUserMedia(username: string) {
-  return useQuery({
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<string>, Error, InfiniteData<Page<string>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.GET_USER_MEDIA, username],
-    queryFn: () => queryMediaByUsername(username)
+    queryFn: ({pageParam}) => queryMediaByUsername(username, timestamp, pageParam), 
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+
+      return undefined;
+    },
   });
 }
 
@@ -661,34 +698,64 @@ export function useUnfollowUser() {
 }
 
 export function useSearchTop(query: string) {
-  return useQuery({
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.SEARCH_POST_LIST, QUERY_KEYS.SEARCH_TOP, query],
-    queryFn: () => searchTop(query),
-    refetchOnWindowFocus: false,
+    queryFn: ({pageParam}) => searchTop(query, timestamp, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+      return undefined;
+    },
   });
 }
 
+
+
 export function useSearchLatest(query: string) {
-  return useQuery({
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.SEARCH_POST_LIST, QUERY_KEYS.SEARCH_LATEST, query],
-    queryFn: () => searchLatest(query),
-    refetchOnWindowFocus: false,
+    queryFn: ({pageParam}) => searchLatest(query, timestamp, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+      return undefined;
+    },
   });
 }
 
 export function useSearchPeople(query: string) {
-  return useQuery({
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<User>, Error, InfiniteData<Page<User>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.SEARCH_PEOPLE, query],
-    queryFn: () => searchPeople(query),
-    refetchOnWindowFocus: false,
+    queryFn: ({pageParam}) => searchPeople(query, timestamp, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+      return undefined;
+    },
   });
 }
 
 export function useSearchMedia(query: string) {
-  return useQuery({
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<string>, Error, InfiniteData<Page<string>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.SEARCH_MEDIA, query],
-    queryFn: () => searchMedia(query),
-    refetchOnWindowFocus: false,
+    queryFn: ({pageParam}) => searchMedia(query, timestamp, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+      return undefined;
+    },
   });
 }
 
@@ -865,9 +932,17 @@ export function useRemoveBookmark(postId: string) {
 
 
 export function useGetBookmarkedPosts() {
-  return useQuery({
-    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_BOOKMARKS],
-    queryFn: getBookmarkedPosts,
+  const timestamp = Math.floor(Date.now() / 1000);
+  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
+    queryKey: [QUERY_KEYS.GET_BOOKMARKS],
+    queryFn: ({pageParam}) => getBookmarkedPosts(timestamp, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+      return undefined;
+    },
   });
 }
 

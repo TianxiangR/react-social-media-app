@@ -55,6 +55,7 @@ function SignUp() {
     resolver: zodResolver(signUpPart3Schema),
     defaultValues: {
       date_of_birth: formData.date_of_birth,
+      profile_image: undefined,
     },
   });
 

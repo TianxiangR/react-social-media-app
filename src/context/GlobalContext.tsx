@@ -1,5 +1,5 @@
 import { Dialog, Drawer, useMediaQuery, useTheme } from '@mui/material';
-import { type UseQueryResult } from '@tanstack/react-query';
+import { InfiniteData, UseInfiniteQueryResult, type UseQueryResult } from '@tanstack/react-query';
 import React, { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { set } from 'zod';
 
@@ -9,7 +9,7 @@ import FullScreenImageView from '@/components/shared/FullScreenImageView';
 import LeftDrawer from '@/components/shared/LeftDrawer';
 import { runMicroTask } from '@/lib/utils';
 import { useGetPosts } from '@/react-query/queriesAndMutations';
-import { DialogType, GlobalState, HomeTab, IPostPreview, ProfileTab } from '@/types';
+import { AugmentedPostPreview, DialogType, GlobalState, HomeTab, IPostPreview, Page, ProfileTab } from '@/types';
 
 const INITIAL_GLOBAL_STATE: GlobalState = {
   home: {
@@ -19,7 +19,7 @@ const INITIAL_GLOBAL_STATE: GlobalState = {
       queryResults: {} as UseQueryResult<IPostPreview[] | undefined, Error>,
     },
     following: {
-      queryResults: {} as UseQueryResult<IPostPreview[] | undefined, Error>,
+      queryResults: {} as UseInfiniteQueryResult<InfiniteData<Page<AugmentedPostPreview>, unknown>, Error>,
     }
   },
   profile: {

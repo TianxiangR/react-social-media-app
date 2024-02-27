@@ -1,8 +1,10 @@
-import { useSearchLatest } from '@/react-query/queriesAndMutations';
 import React from 'react';
 import { useSearchParams } from 'react-router-dom';
-import PostPreview from './PostPreview';
+
+import { useSearchLatest } from '@/react-query/queriesAndMutations';
+
 import Loader from './Loader';
+import PostPreview from './PostPreview';
 
 function SearchLatest() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,7 +34,7 @@ function SearchLatest() {
         </ul>
       );
     }
-  }
+  };
 
   return (
     <>
