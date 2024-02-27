@@ -16,10 +16,14 @@ import useHideOnScroll from '@/hooks/useHideOnScroll';
 import { useSearchTop } from '@/react-query/queriesAndMutations';
 import { QUERY_KEYS } from '@/react-query/queryKeys';
 
+import Latest from './Tabs/Latest';
+import Media from './Tabs/Media';
+import People from './Tabs/People';
+import Top from './Tabs/Top';
+
 function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [inputText, setInputText] = useState<string>(searchParams.get('q') || '');
-  const {data: searchResults, isFetching, isError} = useSearchTop(searchParams.get('q') || '');
   const [currentTab, setCurrentTab] = useState('top');
   const queryClient = useQueryClient();
   const {user} = useUserContext();
@@ -77,84 +81,6 @@ function SearchPage() {
     }
   };
 
-  const renderTop = useMemo(() => {
-    if (isFetching) {
-      return (
-        <div className="mt-10">
-          <Loader />
-        </div>
-      );
-    }
-    else if (isError) {
-      // no-op
-    }
-    else if (searchResults) {
-      return (
-        <div className="post-list">
-          <div className="flex flex-col">
-            <h1 className="text-xl font-bold px-4 py-2">People</h1>
-            <ul className="flex flex-col">
-              {
-                searchResults.users.slice(0, 3).map((user) => (
-                  <li key={user.id} >
-                    <UserPreview {...user} />
-                  </li>
-                ))
-              }
-              <li 
-                className="p-4 w-full hover:bg-[#f7f7f7] hover:cursor-pointer text-blue"
-                onClick={() => setCurrentTab('people')}
-              >
-                View all
-              </li>
-            </ul>
-          </div>
-          {
-            searchResults.posts.length > 0 && (
-              <div className="flex flex-col">
-                <ul className="post-list">
-                  {
-                    searchResults.posts.map((post) => (
-                      <li key={post.id} >
-                        <PostPreview {...post} />
-                      </li>
-                    ))
-                  }
-                </ul>
-              </div>
-            )
-          }
-        </div>
-      );
-    }
-  }, [searchResults, isFetching, isError]);
-
-  const renderPeople = useMemo(() => {
-    if (isFetching) {
-      return (
-        <div className="mt-10">
-          <Loader />
-        </div>
-      );
-    }
-    else if (isError) {
-      // no-op
-    }
-    else if (searchResults) {
-      return (
-        <ul className="flex flex-col">
-          {
-            searchResults.users.map((user) => (
-              <li key={user.id} >
-                <UserPreview {...user} />
-              </li>
-            ))
-          }
-        </ul>
-      );
-    }
-  }, [searchResults, isFetching, isError]);
-
   return (
     <TabContext value={currentTab}>
       <div className="flex flex-col w-full post-list relative">
@@ -183,16 +109,16 @@ function SearchPage() {
           </TabList>
         </div>
         <TabPanel value="top" className="flex flex-col">
-          {renderTop}
+          <Top setCurrentTab={setCurrentTab} />
         </TabPanel>
         <TabPanel value="latest" className="flex flex-col">
-          <SearchLatest />
+          <Latest />
         </TabPanel>
         <TabPanel value="people" className="flex flex-col">
-          {renderPeople}
+          <People />
         </TabPanel>
         <TabPanel value="media">
-          <SearchMedia />
+          <Media />
         </TabPanel>
       </div>
     </TabContext>

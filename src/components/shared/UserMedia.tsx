@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useInView } from 'react-intersection-observer';
 
 import { useGlobalContext } from '@/context/GlobalContext';
 import { useGetUserMedia } from '@/react-query/queriesAndMutations';
@@ -12,7 +13,14 @@ export interface UserMediaProps {
 }
 
 function UserMedia({ username }: UserMediaProps) {
-  const {data, isPending, isError} = useGetUserMedia(username);
+  const {data, isPending, isError, fetchNextPage} = useGetUserMedia(username);
+  const { ref, inView} = useInView();
+
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage();
+    }
+  }, [inView]);
 
   const renderImages = () => {
     if (isPending) {
@@ -26,7 +34,7 @@ function UserMedia({ username }: UserMediaProps) {
       // no-op
     }
     else if (data) {
-      const {images} = data;
+      const images = data.pages.map((page) => page.results).flat();
       return <ImageGrid images={images} />;
     }
   };

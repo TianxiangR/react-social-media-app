@@ -1,6 +1,6 @@
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { getFormDataFromObject, getQueryStringFromObject } from '@/lib/utils';
-import { AugmentedPostPreview, IPost, IPostPreview, NewPost, NewUser, Notification, SearchLatestResult, SearchMediaResult, SearchPeopleResult, SearchTopResult, TokenResponse, User, UserProfile } from '@/types';
+import { AugmentedPostPreview, IPost, IPostPreview, NewPost, NewUser, Notification, Page, SearchLatestResult, SearchMediaResult, SearchPeopleResult, SearchTopResult, TokenResponse, User, UserProfile } from '@/types';
 
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -95,10 +95,14 @@ export async function createPost(post: NewPost): Promise<AugmentedPostPreview> {
   return data;
 }
 
-export async function getPosts(): Promise<AugmentedPostPreview[]> {
+export async function getPosts(page: number, timestamp: number): Promise<Page<AugmentedPostPreview>> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const urlSearchParams = new URLSearchParams({
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
 
-  const response = await fetch(`${baseUrl}/api/posts/`, {
+  const response = await fetch(`${baseUrl}/api/posts/?${urlSearchParams.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -236,9 +240,14 @@ export async function queryUserByUsername(username: string): Promise<User> {
   return data;
 }
 
-export async function queryPostsByUsername(username: string): Promise<IPostPreview[]> {
+export async function queryPostsByUsername(username: string, timestamp: number, page: number): Promise<Page<AugmentedPostPreview>> {
+  const urlSearchParams = new URLSearchParams({
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
+
   const response = await fetch(
-    `${baseUrl}/api/users/${username}/posts/`,
+    `${baseUrl}/api/users/${username}/posts/?${urlSearchParams.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${localStorage.getItem(TOKEN_STORAGE_KEY)}`,
@@ -254,7 +263,7 @@ export async function queryPostsByUsername(username: string): Promise<IPostPrevi
   return data;
 }
 
-export async function queryLikesByUsername(username: string): Promise<IPostPreview[]> {
+export async function queryLikesByUsername(username: string, timestamp: number, page:number): Promise<Page<AugmentedPostPreview>> {
   const response = await fetch(
     `${baseUrl}/api/users/${username}/likes/`,
     {
@@ -272,7 +281,7 @@ export async function queryLikesByUsername(username: string): Promise<IPostPrevi
   return data;
 }
 
-export async function queryMediaByUsername(username: string): Promise<{images: string[]}> {
+export async function queryMediaByUsername(username: string, timestamp: number, page: number): Promise<Page<string>> {
   const response = await fetch(
     `${baseUrl}/api/users/${username}/media/`,
     {
@@ -340,9 +349,15 @@ export async function unfollowUser(username: string): Promise<User> {
   return data;
 }
 
-export async function searchTop(query: string): Promise<SearchTopResult> {
+export async function searchTop(query: string, timestamp: number, page: number): Promise<Page<AugmentedPostPreview>> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
-  const response = await fetch(`${baseUrl}/api/search/?q=${query}&type=top`, 
+  const searchParams = new URLSearchParams({
+    q: query,
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+    type: 'top',
+  });
+  const response = await fetch(`${baseUrl}/api/search/?${searchParams.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -355,9 +370,16 @@ export async function searchTop(query: string): Promise<SearchTopResult> {
   return data;
 }
 
-export async function searchLatest(query: string): Promise<SearchLatestResult> {
+export async function searchLatest(query: string, timestamp: number, page: number): Promise<Page<AugmentedPostPreview>> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
-  const response = await fetch(`${baseUrl}/api/search/?q=${query}&type=latest`, 
+  const searchParams = new URLSearchParams({
+    q: query,
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+    type: 'latest',
+  });
+
+  const response = await fetch(`${baseUrl}/api/search/?${searchParams.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -370,9 +392,16 @@ export async function searchLatest(query: string): Promise<SearchLatestResult> {
   return data;
 }
 
-export async function searchPeople(query: string): Promise<SearchPeopleResult> {
+export async function searchPeople(query: string, timestamp: number, page: number): Promise<Page<User>> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
-  const response = await fetch(`${baseUrl}/api/search/?q=${query}&type=people`, 
+  const searchParams = new URLSearchParams({
+    q: query,
+    type: 'people',
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
+
+  const response = await fetch(`${baseUrl}/api/search/?${searchParams.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -385,9 +414,16 @@ export async function searchPeople(query: string): Promise<SearchPeopleResult> {
   return data;
 }
 
-export async function searchMedia(query: string): Promise<SearchMediaResult> {
+export async function searchMedia(query: string, timestamp: number, page: number): Promise<Page<string>> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
-  const response = await fetch(`${baseUrl}/api/search/?q=${query}&type=media`, 
+  const searchParams = new URLSearchParams({
+    q: query,
+    type: 'media',
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
+
+  const response = await fetch(`${baseUrl}/api/search/?${searchParams.toString()}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -435,10 +471,14 @@ export async function removeBookmarkByPostId(postId: string): Promise<AugmentedP
 }
 
 
-export async function getBookmarkedPosts(): Promise<AugmentedPostPreview[]> {
+export async function getBookmarkedPosts(timestamp: number, page: number): Promise<Page<AugmentedPostPreview>> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const seachParams = new URLSearchParams({
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
 
-  const response = await fetch(`${baseUrl}/api/bookmarks/`, {
+  const response = await fetch(`${baseUrl}/api/bookmarks/?${seachParams.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

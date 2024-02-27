@@ -55,6 +55,7 @@ function SignUp() {
     resolver: zodResolver(signUpPart3Schema),
     defaultValues: {
       date_of_birth: formData.date_of_birth,
+      profile_image: undefined,
     },
   });
 
@@ -116,7 +117,7 @@ function SignUp() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name</FormLabel>
+                      <FormLabel>Display Name</FormLabel>
                       <FormControl>
                         <Input type="text" {...field} />
                       </FormControl>

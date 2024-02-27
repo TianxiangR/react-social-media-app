@@ -49,7 +49,7 @@ export const signUpPart2Schema = z.object({
 
 export const signUpPart3Schema = z.object({
   date_of_birth: z.string(),
-  profile_image: z.custom<File>(),
+  profile_image: z.custom<File>((file) => {if (file instanceof File) return true; return false;}, {message: 'Please select a profile image'}),
 });
 
 export const editProfileSchema = z.object({

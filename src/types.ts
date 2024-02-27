@@ -1,4 +1,4 @@
-import { UseQueryResult } from '@tanstack/react-query';
+import { InfiniteData, UseInfiniteQueryResult, UseQueryResult } from '@tanstack/react-query';
 import { type Dispatch, type SetStateAction } from 'react';
 import * as z from 'zod';
 
@@ -79,7 +79,7 @@ export type GlobalState = {
       queryResults : UseQueryResult<IPostPreview[] | undefined, Error>;
     }
     following: {
-      queryResults : UseQueryResult<IPostPreview[] | undefined, Error>;
+      queryResults : UseInfiniteQueryResult<InfiniteData<Page<AugmentedPostPreview>, unknown>, Error>
     }
   },
   profile: {
@@ -149,3 +149,11 @@ export type FollowNotification = {
 }
 
 export type Notification = PostNotification | FollowNotification | LikeNotification;
+
+export type Page<T> = {
+  next: number | null;
+  previous: number | null;
+  results: T[];
+  count: number;
+  total_pages: number;
+}

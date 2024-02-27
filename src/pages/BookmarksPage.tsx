@@ -1,6 +1,7 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { useMediaQuery } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
+import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 
 import IconButton from '@/components/shared/IconButton';
@@ -12,8 +13,15 @@ import { useGetBookmarkedPosts } from '@/react-query/queriesAndMutations';
 
 function BookmarksPage() {
   const { user } = useUserContext();
-  const { data: posts, isPending, isError } = useGetBookmarkedPosts();
+  const { data, isPending, isError, fetchNextPage } = useGetBookmarkedPosts();
   const navigate = useNavigate();
+  const { ref: viewRef, inView } = useInView();
+
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage();
+    }
+  }, [inView]);
 
   const shouldHide = useMediaQuery('(max-width: 768px)');
   const fakeRef = useRef(null);
@@ -46,14 +54,25 @@ function BookmarksPage() {
           <h2 className="text-xl font-bold">Error fetching bookmarks</h2>
         </div>
       );
-    } else if (posts) {
+    } else if (data) {
+      const posts = data.pages.map((page) => page.results).flat();
       return (
         <ul className="post-list">
-          {posts.map((post) => (
-            <li key={post.id}>
-              <PostPreview {...post} />
-            </li>
-          ))}
+          {posts.map((post, index) => {
+            if (index === posts.length - 5) {
+              return (
+                <li key={post.id} ref={inView ? viewRef : undefined}>
+                  <PostPreview {...post} />
+                </li>
+              );
+            }
+
+            return (
+              <li key={post.id}>
+                <PostPreview {...post} />
+              </li>
+            );
+          })}
         </ul>
       );
     }
@@ -62,7 +81,7 @@ function BookmarksPage() {
 
   return (
     <div className="flex flex-col w-full relative">
-      <div className="flex sticky-bar px-4 py-2 gap-5 items-center h-[53px]" ref={ref}>
+      <div className="flex sticky-bar px-4 py-2 gap-5 items-center h-[53px]" ref={viewRef}>
         <div className='block md:hidden'>
           <IconButton className="text-xl" onClick={() => navigate(-1)}>
             <ArrowBackIcon sx={{fontSize: '24px'}}/>
