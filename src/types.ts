@@ -76,7 +76,7 @@ export type GlobalState = {
     currentTab : 'for-you' | 'following';
     setCurrentTab: Dispatch<SetStateAction<'for-you' | 'following'>>;
     for_you: {
-      queryResults : UseQueryResult<IPostPreview[] | undefined, Error>;
+      queryResults : UseInfiniteQueryResult<InfiniteData<Page<AugmentedPostPreview>, unknown>, Error>
     }
     following: {
       queryResults : UseInfiniteQueryResult<InfiniteData<Page<AugmentedPostPreview>, unknown>, Error>

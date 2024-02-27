@@ -8,7 +8,7 @@ import { useSearchMedia } from '@/react-query/queriesAndMutations';
 
 function Media() {
   const [searchParams] = useSearchParams();
-  const {data, isFetching, isError, fetchNextPage} = useSearchMedia(searchParams.get('q') || '');
+  const {data, isPending, isFetchingNextPage, isError, fetchNextPage} = useSearchMedia(searchParams.get('q') || '');
   const { ref, inView } = useInView();
 
   useEffect(() => {
@@ -18,7 +18,7 @@ function Media() {
   }, [inView]);
 
   const renderImages = () => {
-    if (isFetching) {
+    if (isPending) {
       return (
         <div className="flex jusitfy-center items-center mt-10">
           <Loader />
@@ -37,6 +37,13 @@ function Media() {
   return (
     <>
       {renderImages()}
+      {
+        isFetchingNextPage && (
+          <div className="flex justify-center items-center mt-10">
+            <Loader />
+          </div>
+        )
+      }
     </>
   );
 }

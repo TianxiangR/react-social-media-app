@@ -8,7 +8,7 @@ import { useSearchLatest } from '@/react-query/queriesAndMutations';
 
 function Latest() {
   const [searchParams] = useSearchParams();
-  const {data, isFetching, isError, fetchNextPage} = useSearchLatest(searchParams.get('q') || '');
+  const {data, isPending, isError, fetchNextPage, isFetchingNextPage} = useSearchLatest(searchParams.get('q') || '');
   const { ref, inView} = useInView();
 
   useEffect(() => {
@@ -18,7 +18,7 @@ function Latest() {
   }, [inView]);
 
   const renderPosts = () => {
-    if (isFetching) {
+    if (isPending) {
       return (
         <div className="mt-10">
           <Loader />
@@ -53,6 +53,13 @@ function Latest() {
                 </li>
               );
             })
+          }
+          {
+            isFetchingNextPage && (
+              <div className="mt-10">
+                <Loader />
+              </div>
+            )
           }
         </ul>
       );

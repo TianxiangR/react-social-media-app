@@ -3,11 +3,13 @@ import { useMediaQuery } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 
 import CreatePostForm from '@/components/shared/CreatePostForm';
-import FollowingPosts from '@/components/shared/FollowingPosts';
 import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
 import useHideOnScroll from '@/hooks/useHideOnScroll';
+import FollowingPosts from '@/pages/HomePage/Tabs/FollowingPosts';
+
+import ForYouPosts from './Tabs/ForYou';
 
 function Home() {
   const globalContext = useGlobalContext();
@@ -52,11 +54,7 @@ function Home() {
           </TabList>
         </div>
         <TabPanel value="for-you" className="flex flex-col">
-          <ul className="flex flex-col w-full">
-            <li className="border-b-[1px] border-[#eff3f4]">
-              <CreatePostForm />
-            </li>
-          </ul>
+          <ForYouPosts />
         </TabPanel>
         <TabPanel value="following" className="h-full">
           <FollowingPosts />
