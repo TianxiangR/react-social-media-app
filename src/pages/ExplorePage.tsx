@@ -6,8 +6,6 @@ import { useNavigate,useSearchParams  } from 'react-router-dom';
 
 import Loader from '@/components/shared/Loader';
 import PostPreview from '@/components/shared/PostPreview';
-import SearchLatest from '@/components/shared/SearchLatest';
-import SearchMedia from '@/components/shared/SearchMedia';
 import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import UserPreview from '@/components/shared/UserPreview';
 import { useUserContext } from '@/context/AuthContext';

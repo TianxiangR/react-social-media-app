@@ -1,19 +1,13 @@
 import SearchIcon from '@mui/icons-material/Search';
 import { useMediaQuery } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate,useSearchParams  } from 'react-router-dom';
 
-import Loader from '@/components/shared/Loader';
-import PostPreview from '@/components/shared/PostPreview';
-import SearchLatest from '@/components/shared/SearchLatest';
-import SearchMedia from '@/components/shared/SearchMedia';
 import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
-import UserPreview from '@/components/shared/UserPreview';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
 import useHideOnScroll from '@/hooks/useHideOnScroll';
-import { useSearchTop } from '@/react-query/queriesAndMutations';
 import { QUERY_KEYS } from '@/react-query/queryKeys';
 
 import Latest from './Tabs/Latest';
