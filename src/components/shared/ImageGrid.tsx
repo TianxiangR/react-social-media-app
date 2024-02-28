@@ -24,7 +24,7 @@ function ImageGrid({images, liRef}: ImageGridProps) {
               <img
                 src={image}
                 alt="image"
-                className="w-full h-full object-cover"
+                className="aspect-square object-cover object-center cursor-pointer"
                 onClick={() => handleImageClick(index)}
               />
             </li>
@@ -36,7 +36,7 @@ function ImageGrid({images, liRef}: ImageGridProps) {
             <img
               src={image}
               alt="image"
-              className="w-full h-full object-cover"
+              className="aspect-square object-cover object-center cursor-pointer"
               onClick={() => handleImageClick(index)}
             />
           </li>
