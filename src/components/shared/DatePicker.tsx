@@ -36,7 +36,6 @@ function DatePicker({ value, onChange, start, end, className, ...props}: DatePic
   useEffect(() => {
     const newDays = getDaysInMonth(Number(selectedYear), Number(selectedMonth));
     if (Number(selectedDay) > newDays.length) {
-      console.log('here', newDays[newDays.length - 1]);
       setSelectedDay(newDays[newDays.length - 1]);
     }
   }, [selectedMonth, selectedYear]);

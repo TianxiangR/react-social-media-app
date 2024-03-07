@@ -16,14 +16,16 @@ import PostDetailStats from '@/components/shared/PostDetailStats';
 import PostPreview from '@/components/shared/PostPreview';
 import ReplyPostForm from '@/components/shared/ReplyPostForm';
 import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
-import UserLikes from '@/components/shared/UserLikes';
-import UserMedia from '@/components/shared/UserMedia';
-import UserPosts from '@/components/shared/UserPosts';
 import { Button } from '@/components/ui/button';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
 import useHideOnScroll from '@/hooks/useHideOnScroll';
+import UserLikes from '@/pages/ProfilePage/Tabs/Likes';
+import UserMedia from '@/pages/ProfilePage/Tabs/Media';
+import UserPosts from '@/pages/ProfilePage/Tabs/Posts';
 import { useFollowUser, useGetUserProfile, useUnfollowUser } from '@/react-query/queriesAndMutations';
+
+import UserReplies from './Tabs/Replies';
 
 function ProfilePage() {
   const { username = '' } = useParams();
@@ -32,7 +34,6 @@ function ProfilePage() {
   const navigate = useNavigate();
   const [currentTab, setCurrentTab] = useState('posts');
   const { openDialog } = useGlobalContext().dialog;
-  const [isFollowing, setIsFollowing] = useState(userInfo?.is_following || false);
   const {mutate: follow} = useFollowUser();
   const {mutate: unfollow} = useUnfollowUser();
 
@@ -90,10 +91,10 @@ function ProfilePage() {
 
   const handleFollowClick = (e: React.SyntheticEvent) => {
     e.stopPropagation();
-    if (isFollowing) {
-      unfollow(username, {onSuccess: () => setIsFollowing(false)});
+    if (userInfo?.is_following) {
+      unfollow(username);
     } else {
-      follow(username, {onSuccess: () => setIsFollowing(true)});
+      follow(username);
     }
   };
 
@@ -231,7 +232,7 @@ function ProfilePage() {
                 <UserPosts username={userInfo.username} />
               </TabPanel>
               <TabPanel value="replies" className="h-full pb-80">
-                <UserPosts username={userInfo.username} />
+                <UserReplies username={userInfo.username} />
               </TabPanel>
               <TabPanel value="media" className="h-full pb-80">
                 <UserMedia username={userInfo.username} />

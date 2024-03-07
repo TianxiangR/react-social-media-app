@@ -3,14 +3,13 @@ import { useInView } from 'react-intersection-observer';
 
 import CreatePostForm from '@/components/shared/CreatePostForm';
 import PostPreview from '@/components/shared/PostPreview';
-import { useGlobalContext } from '@/context/GlobalContext';
+import { useGetTopRatedPosts } from '@/react-query/queriesAndMutations';
 
 import Loader from '../../../components/shared/Loader';
 
 
-function ForYouPosts() {
-  const globalContext = useGlobalContext();
-  const { data: response, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = globalContext.home.for_you.queryResults;
+function ForYouPosts() {   
+  const { data, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = useGetTopRatedPosts();
   const [ref, inView] = useInView();
 
   useEffect(() => {
@@ -19,7 +18,6 @@ function ForYouPosts() {
     }
   }, [inView]);
 
-
   const renderPosts = () => {
     if (isLoadingPosts) {
       return <Loader />;
@@ -27,13 +25,13 @@ function ForYouPosts() {
     else if (isError) {
       return <div>Failed to load posts</div>;
     }
-    else if (response) {
-      const posts = response.pages.map((page) => page.results).flat();
+    else if (data) {
+      const posts = data.pages.map((page) => page.results).flat();
       return posts.map((post, index) => {
         if (index === posts.length - 5) {
           return (
             <li key={post.id} className="w-full" ref={ref}>
-              <PostPreview {...post} />
+              <PostPreview post={post} />
             </li>
           );
         }
@@ -41,7 +39,7 @@ function ForYouPosts() {
         return (
           <>
             <li key={post.id} className="w-full">
-              <PostPreview {...post} />
+              <PostPreview post={post} />
             </li>
           </>
         );

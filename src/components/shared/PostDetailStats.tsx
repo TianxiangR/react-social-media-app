@@ -31,7 +31,7 @@ export interface PostStatsProps {
   bookmarked: boolean;
 }
 function PostDetailStats(props: IPostPreview) {
-  const {id, liked: initial_liked, like_count: initial_like_count, comment_count, repost_count, view_count, bookmarked} = props;
+  const {id, liked: initial_liked, like_count: initial_like_count, comment_count, repost_count, view_count, bookmarked, bookmark_count} = props;
   const [liked, setLiked] = useState(initial_liked);
   const [like_count, setLikeCount] = useState(initial_like_count);
   const { mutateAsync: repost} = useRepostPostById(id);
@@ -128,10 +128,10 @@ function PostDetailStats(props: IPostPreview) {
       </div>
 
       <div className="flex flex-1 jjustify-start items-center group/like gap-1 hover:cursor-pointer">
-        <IconButton className="text-[#536471] hover:text-blue text-xl">
+        <IconButton className="text-[#536471] hover:text-blue text-xl" onClick={handleBookmarkClick}>
           {bookmarked ? <BookmarkIcon sx={{fontSize: '1.4rem', color: 'rgb(29, 155, 240)'}}/> : <BookmarkBorderOutlinedIcon sx={{fontSize: '1.4rem'}}/>}
         </IconButton>
-        <span className="text-sm group-hover/like:text-blue select-none">{view_count || ''}</span>
+        <span className="text-sm group-hover/like:text-blue select-none">{bookmark_count || ''}</span>
       </div>
 
       <div className="flex justify-start items-center gap-3">

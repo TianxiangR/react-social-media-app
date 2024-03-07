@@ -1,14 +1,16 @@
 
 import CloseIcon from '@mui/icons-material/Close';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
-import { TextField } from '@mui/material';
+import { Alert, Slide, SlideProps, Snackbar, TextField } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
+import { useSnackbarContext } from '@/context/SnackbarContext';
 import { countNonWhiteSpaceCharacters } from '@/lib/utils';
 import { useCreatePost, useReplyPostById, useRepostPostById } from '@/react-query/queriesAndMutations';
-import { IPostPreview } from '@/types';
+import { AugmentedPostPreview, IPostPreview } from '@/types';
 
 import { Button } from '../ui/button';
 import IconButton from './IconButton';
@@ -24,8 +26,6 @@ export type PostDialogContentProps = {
   variant: 'reply' | 'repost';
   parent_post: IPostPreview;
 }
-
-
 function PostDialogContent({variant = 'create', parent_post}: PostDialogContentProps) {
   const { closeDialog } = useGlobalContext().dialog;
   const selectFileRef = useRef<HTMLInputElement>(null);
@@ -67,7 +67,7 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
     setImageFiles([]);
   };
 
-  const onMutateSuccess = () => {
+  const onMutateSuccess = (data: AugmentedPostPreview) => {
     resetCreatePost();
     resetReplyPost();
     resetRepostPost();
@@ -88,6 +88,8 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
 
     await createPost({content: inputText, images: imageFiles},  {onSuccess: onMutateSuccess});
   };
+
+
 
   return (  
     <div className="dialog-content">

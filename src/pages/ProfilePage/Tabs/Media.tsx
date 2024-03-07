@@ -4,9 +4,9 @@ import { useInView } from 'react-intersection-observer';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { useGetUserMedia } from '@/react-query/queriesAndMutations';
 
-import FullScreenImageView from './FullScreenImageView';
-import ImageGrid from './ImageGrid';
-import Loader from './Loader';
+import FullScreenImageView from '../../../components/shared/FullScreenImageView';
+import ImageGrid from '../../../components/shared/ImageGrid';
+import Loader from '../../../components/shared/Loader';
 
 export interface UserMediaProps {
   username: string;

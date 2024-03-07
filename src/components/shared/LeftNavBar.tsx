@@ -25,8 +25,6 @@ function LeftNavBar() {
   const {user} = useUserContext();
   const navigate = useNavigate();
 
-  console.log(pathname);
-
   const logout = () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
     navigate('/');

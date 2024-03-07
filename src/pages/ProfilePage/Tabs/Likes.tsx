@@ -7,7 +7,7 @@ import { useGlobalContext } from '@/context/GlobalContext';
 import { useGetUserLikes } from '@/react-query/queriesAndMutations';
 import { AugmentedPostPreview } from '@/types';
 
-import Loader from './Loader';
+import Loader from '../../../components/shared/Loader';
 
 export interface UserLikesProps {
   username: string;
@@ -34,14 +34,14 @@ function UserLikes({ username }: UserLikesProps) {
         if (index === posts.length - 5) {
           return (
             <li key={post.id} className="w-full" ref={ref}>
-              <PostPreview {...post} />
+              <PostPreview post={post} />
             </li>
           );
         }
       
         return (
           <li key={post.id} className="w-full">
-            <PostPreview {...post} />
+            <PostPreview post={post} />
           </li>
         );
       });

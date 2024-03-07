@@ -1,19 +1,54 @@
+import { Alert, Slide, type SlideProps } from '@mui/material';
 import { InfiniteData, QueryFunction, QueryFunctionContext, QueryKey, useInfiniteQuery,useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { addBookmarkByPostId, createPost, createUser, deletePostById, followUser, getBookmarkedPosts,  getCurrentUser, getNotifications, getPostById, getPosts, getTopRatedPosts, likePost, queryLikesByUsername, queryMediaByUsername, queryPostsByUsername, queryUserByUsername, removeBookmarkByPostId,replyPostById, repostPostById, searchLatest, searchMedia,searchPeople, searchTop, signInUser, unfollowUser, unlikePost, updateProfile } from '@/apis';
 import { TOKEN_STORAGE_KEY } from '@/constants';
-import { AugmentedPostPreview, IPost, NewPost, Notification,Page,SearchLatestResult, SearchPeopleResult, SearchTopResult, User, UserProfile } from '@/types';
+import { useSnackbarContext } from '@/context/SnackbarContext';
+import { AugmentedPostPreview, IPost, NewPost, Notification,Page, User, UserProfile } from '@/types';
 
 import { QUERY_KEYS } from './queryKeys';
 
+function SlideTransition(props: SlideProps) {
+  return <Slide {...props} direction="up" />;
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbarContext();
+
   return useMutation({
     mutationFn: createUser,
     onSuccess: (data) => {
+      const content = (
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Your account was created.
+        </Alert>
+      );
+
+      showSnackbar({props: { 
+        autoHideDuration: 3000, 
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
+
       localStorage.setItem(TOKEN_STORAGE_KEY, data.access);
       queryClient.resetQueries();
+    },
+    onError: () => {
+      const content = (
+        <Alert severity="error" sx={{ width: '100%' }}>
+          There was an error creating your account.
+          Please try again.
+        </Alert>
+      );
+
+      showSnackbar({props: { 
+        autoHideDuration: 3000, 
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
     }
   });
 }
@@ -53,16 +88,36 @@ export function useLogoutUser() {
 
 export function useCreatePost () {
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbarContext();
+
   return useMutation({
     mutationFn: createPost,
     onSuccess: (data) => {
+      const content = (
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Your post was sent. <Link to={`/${data.author.username}/status/${data.id}`} className='hover:underline font-bold'>View</Link>
+        </Alert>
+      );
+  
+      showSnackbar({props: { 
+        autoHideDuration: 3000, 
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, 
+      content});
+
       queryClient.setQueriesData({
         queryKey: [QUERY_KEYS.QUERY_POST_LIST],
       },
-      (oldData: AugmentedPostPreview[] | undefined) => {
+      (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
         if (!oldData) return;
+        
+        const newData = {...oldData};
+        if (oldData.pages[0]) {
+          newData.pages[0].results = [data, ...oldData.pages[0].results];
+        }
 
-        return [data, ...oldData];
+        return newData;
       });
 
       queryClient.setQueryData([QUERY_KEYS.GET_USER_MEDIA], (oldData: string[] | undefined) => {
@@ -71,6 +126,20 @@ export function useCreatePost () {
         return [...data.images, ...oldData];
       });
     },
+    onError: () => {
+      const content = (
+        <Alert severity="error" sx={{ width: '100%' }}>
+          There was an error creating your post.
+          Please try again.
+        </Alert>
+      );
+
+      showSnackbar({props: { 
+        autoHideDuration: 3000, 
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
+    }
   });
 }
 
@@ -99,32 +168,13 @@ export function useLikePost (postId: string) {
         {
           queryKey: [QUERY_KEYS.QUERY_POST_LIST],
         },
-        (oldData: AugmentedPostPreview[] | undefined) => {
+        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
           if (!oldData) return;
 
-          return oldData.map((post) => {
-            if (post.id === postId) {
-              return {
-                ...post,
-                liked: true,
-                like_count: post.like_count + 1,
-              };
-            }
+          const newData = {...oldData};
 
-            return post;
-          });
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST],
-        },
-        (oldData: SearchTopResult | SearchLatestResult | undefined) => {
-          if (!oldData) return;
-
-          return {
-            ...oldData,
-            posts: oldData.posts.map((post) => {
+          newData.pages.map((page) => {
+            page.results = page.results.map((post) => {
               if (post.id === postId) {
                 return {
                   ...post,
@@ -134,10 +184,13 @@ export function useLikePost (postId: string) {
               }
 
               return post;
-            }),
-          };
-        }
-      );
+            });
+
+            return page;
+          });
+
+          return newData;
+        });
 
       queryClient.setQueryData([QUERY_KEYS.GET_POST_BY_ID, postId], (oldData: IPost | undefined) => {
         if (!oldData) return;
@@ -179,32 +232,13 @@ export function useUnlikePost (postId: string) {
         {
           queryKey: [QUERY_KEYS.QUERY_POST_LIST],
         },
-        (oldData: AugmentedPostPreview[] | undefined) => {
+        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
           if (!oldData) return;
 
-          return oldData.map((post) => {
-            if (post.id === postId) {
-              return {
-                ...post,
-                liked: false,
-                like_count: post.like_count - 1,
-              };
-            }
+          const newData = {...oldData};
 
-            return post;
-          });
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST],
-        },
-        (oldData: SearchTopResult | SearchLatestResult | undefined) => {
-          if (!oldData) return;
-
-          return {
-            ...oldData,
-            posts: oldData.posts.map((post) => {
+          newData.pages.map((page) => {
+            page.results = page.results.map((post) => {
               if (post.id === postId) {
                 return {
                   ...post,
@@ -214,10 +248,14 @@ export function useUnlikePost (postId: string) {
               }
 
               return post;
-            }),
-          };
-        }
-      );
+            });
+
+            return page;
+          });
+
+          return newData;
+        });
+
       queryClient.setQueryData([QUERY_KEYS.GET_POST_BY_ID, postId], (oldData: IPost | undefined) => {
         if (!oldData) return;
 
@@ -258,14 +296,37 @@ export function useGetPostById (postId: string) {
 
 export function useDeletePostById (postId: string) {
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbarContext();
 
   return useMutation({
     mutationFn: () => deletePostById(postId),
     onSuccess: () => {
-      queryClient.setQueryData([QUERY_KEYS.QUERY_POST_LIST], (oldData: AugmentedPostPreview[] | undefined) => {
+
+      const content = (
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Your post was deleted.
+        </Alert>
+      );
+
+      showSnackbar({props: { 
+        autoHideDuration: 3000, 
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
+
+      queryClient.setQueriesData({
+        queryKey: [QUERY_KEYS.QUERY_POST_LIST],
+      }, (oldData:InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
         if (!oldData) return;
 
-        return oldData.filter((post) => post.id !== postId);
+        const newData = {...oldData};
+
+        newData.pages.map((page) => {
+          page.results = page.results.filter((post) => post.id !== postId);
+          return page;
+        });
+
+        return newData;
       });
 
       queryClient.invalidateQueries(
@@ -279,53 +340,63 @@ export function useDeletePostById (postId: string) {
 
 export function useReplyPostById(postId: string) {
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbarContext();
 
   return useMutation({
     mutationFn: (post: NewPost) => replyPostById(postId, post),
     onSuccess: (data) => {
+      const content = (
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Your post was sent. <Link to={`/${data.author.username}/status/${data.id}`} className='hover:underline font-bold'>View</Link>
+        </Alert>
+      );
+
+      showSnackbar({props: { 
+        autoHideDuration: 3000, 
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
+
+      queryClient.setQueriesData({
+        queryKey: [QUERY_KEYS.QUERY_POST_LIST],
+      },
+      (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
+        if (!oldData) return;
+        
+        const newData = {...oldData};
+        if (oldData.pages[0]) {
+          newData.pages[0].results = [data, ...oldData.pages[0].results];
+        }
+
+        return newData;
+      });
+      
       queryClient.setQueriesData(
         {
           queryKey: [QUERY_KEYS.QUERY_POST_LIST],
         },
-        (oldData: AugmentedPostPreview[] | undefined) => {
+        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
           if (!oldData) return;
 
-          return oldData.map((post) => {
-            if (post.id === postId) {
-              return {
-                ...post,
-                comment_count: post.comment_count + 1,
-              };
-            }
-            return post;
-          });
-        });
+          const newData = {...oldData};
 
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST],
-        },
-        (oldData: SearchTopResult | SearchLatestResult | undefined) => {
-          if (!oldData) return;
-
-          return {
-            ...oldData,
-            posts: oldData.posts.map((post) => {
+          newData.pages.map((page) => {
+            page.results = page.results.map((post) => {
               if (post.id === postId) {
-                if (post.id === postId) {
-                  return {
-                    ...post,
-                    comment_count: post.comment_count + 1,
-                  };
-                }
-                return post;
+                return {
+                  ...post,
+                  comment_count: post.comment_count + 1,
+                };
               }
 
               return post;
-            }),
-          };
-        }
-      );
+            });
+
+            return page;
+          });
+
+          return newData;
+        });
 
       queryClient.setQueryData([QUERY_KEYS.GET_POST_BY_ID, postId], (oldData: IPost | undefined): IPost | undefined => {
         if (!oldData) return;
@@ -354,53 +425,63 @@ export function useReplyPostById(postId: string) {
 
 export function useRepostPostById(postId: string) {
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbarContext();
 
   return useMutation({
     mutationFn: (post: Partial<NewPost>) => repostPostById(postId, post),
     onSuccess: (data) => {
+      const content = (
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Your post was sent. <Link to={`/${data.author.username}/status/${data.id}`} className='hover:underline font-bold'>View</Link>
+        </Alert>
+      );
+
+      showSnackbar({props: { 
+        autoHideDuration: 3000, 
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
+
+      queryClient.setQueriesData({
+        queryKey: [QUERY_KEYS.QUERY_POST_LIST],
+      },
+      (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
+        if (!oldData) return;
+        
+        const newData = {...oldData};
+        if (oldData.pages[0]) {
+          newData.pages[0].results = [data, ...oldData.pages[0].results];
+        }
+
+        return newData;
+      });
+
       queryClient.setQueriesData(
         {
           queryKey: [QUERY_KEYS.QUERY_POST_LIST],
         },
-        (oldData: AugmentedPostPreview[] | undefined) => {
+        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
           if (!oldData) return;
 
-          return oldData.map((post) => {
-            if (post.id === postId) {
-              return {
-                ...post,
-                repost_count: post.repost_count + 1,
-              };
-            }
-            return post;
-          });
-        });
+          const newData = {...oldData};
 
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST],
-        },
-        (oldData: SearchTopResult | SearchLatestResult | undefined) => {
-          if (!oldData) return;
-
-          return {
-            ...oldData,
-            posts: oldData.posts.map((post) => {
+          newData.pages.map((page) => {
+            page.results = page.results.map((post) => {
               if (post.id === postId) {
-                if (post.id === postId) {
-                  return {
-                    ...post,
-                    repost_count: post.repost_count + 1,
-                  };
-                }
-                return post;
+                return {
+                  ...post,
+                  repost_count: post.repost_count + 1,
+                };
               }
 
               return post;
-            }),
-          };
-        }
-      );
+            });
+
+            return page;
+          });
+
+          return newData;
+        });
 
       queryClient.setQueryData([QUERY_KEYS.GET_POST_BY_ID, postId], (oldData: IPost | undefined): IPost | undefined => {
         if (!oldData) return;
@@ -436,7 +517,7 @@ export function useGetUserProfile(username: string) {
 export function useGetUserPosts(username: string) {
   const timestamp = Math.floor(Date.now() / 1000);
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS],
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS, username],
     queryFn: ({pageParam}) => queryPostsByUsername(username, timestamp, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -452,7 +533,7 @@ export function useGetUserPosts(username: string) {
 export function useGetUserLikes(username: string) {
   const timestamp = Math.floor(Date.now() / 1000);
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_LIKES],
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_LIKES, username],
     queryFn: ({pageParam}) => queryLikesByUsername(username, timestamp, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -512,80 +593,46 @@ export function useFollowUser() {
     onSuccess: (data) => {
       queryClient.setQueriesData(
         {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST, QUERY_KEYS.SEARCH_TOP],
+          queryKey: [QUERY_KEYS.SEARCH_PEOPLE],
         },
-        (oldData: SearchTopResult | undefined) => {
+        (oldData: InfiniteData<Page<User>> | undefined) => {
           if (!oldData) return;
 
-          return {
-            ...oldData,
-            users: oldData.users.map((user) => {
+          const newData = {...oldData};
+
+          newData.pages.forEach((page) => {
+            page.results = page.results.map((user) => {
               if (user.id === data.id) {
                 return data;
               }
 
               return user;
-            }),
-          };
+            });
+          });
+
+          return newData;
         });
-
-      queryClient.setQueryData([QUERY_KEYS.SEARCH_PEOPLE], (oldData: SearchPeopleResult | undefined) => {
-        if (!oldData) return;
-
-        return {
-          ...oldData,
-          users: oldData.users.map((user) => {
-            if (user.username === data.username) {
-              return data;
-            }
-
-            return user;
-          }),
-        };
-      });
 
       queryClient.setQueriesData(
         {
           queryKey: [QUERY_KEYS.QUERY_POST_LIST],
         },
-        (oldData: AugmentedPostPreview[] | undefined): AugmentedPostPreview[] | undefined => {
+        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
           if (!oldData) return;
 
-          return oldData.map((post) => {
-            if (post.author.id === data.id) {
-              return {
-                ...post,
-                author: data,
-              };
-            }
+          const newData = {...oldData};
 
-            return post;
-          });
-        }
-      );
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST],
-        },
-        (oldData: SearchTopResult | SearchLatestResult | undefined): SearchTopResult | SearchLatestResult | undefined => {
-          console.log(oldData);
-          if (!oldData) return;
-
-          return {
-            ...oldData,
-            posts: oldData.posts.map((post) => {
+          newData.pages.forEach((page) => {
+            page.results.forEach((post) => {
               if (post.author.id === data.id) {
-                return {
-                  ...post,
-                  author: data
-                };
+                post.author = data;
               }
-              return post;
-            }),
-          };
-        }
-      );
+            });
+          });
+
+          console.log(newData);
+          return newData;
+        });
 
       queryClient.invalidateQueries(
         {
@@ -608,80 +655,44 @@ export function useUnfollowUser() {
     onSuccess: (data) => {
       queryClient.setQueriesData(
         {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST, QUERY_KEYS.SEARCH_TOP],
+          queryKey: [QUERY_KEYS.SEARCH_PEOPLE],
         },
-        (oldData: SearchTopResult | undefined) => {
+        (oldData: InfiniteData<Page<User>> | undefined) => {
           if (!oldData) return;
 
-          return {
-            ...oldData,
-            users: oldData.users.map((user) => {
-              if (user.username === data.username) {
+          const newData = {...oldData};
+
+          newData.pages.forEach((page) => {
+            page.results = page.results.map((user) => {
+              if (user.id === data.id) {
                 return data;
               }
 
               return user;
-            }),
-          };
+            });
+          });
+
+          return newData;
         });
-
-      queryClient.setQueryData([QUERY_KEYS.SEARCH_PEOPLE], (oldData: SearchPeopleResult | undefined) => {
-        if (!oldData) return;
-
-        return {
-          ...oldData,
-          users: oldData.users.map((user) => {
-            if (user.username === data.username) {
-              return data;
-            }
-
-            return user;
-          }),
-        };
-      });
 
       queryClient.setQueriesData(
         {
           queryKey: [QUERY_KEYS.QUERY_POST_LIST],
         },
-        (oldData: AugmentedPostPreview[] | undefined): AugmentedPostPreview[] | undefined => {
+        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
           if (!oldData) return;
 
-          return oldData.map((post) => {
-            if (post.author.id === data.id) {
-              return {
-                ...post,
-                author: data,
-              };
-            }
+          const newData = {...oldData};
 
-            return post;
-          });
-        }
-      );
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST],
-        },
-        (oldData: SearchTopResult | SearchLatestResult | undefined): SearchTopResult | SearchLatestResult | undefined => {
-          console.log(oldData);
-          if (!oldData) return;
-
-          return {
-            ...oldData,
-            posts: oldData.posts.map((post) => {
+          newData.pages.forEach((page) => {
+            page.results.forEach((post) => {
               if (post.author.id === data.id) {
-                return {
-                  ...post,
-                  author: data
-                };
+                post.author = data;
               }
-              return post;
-            }),
-          };
-        }
-      );
+            });
+          });
+          return newData;
+        });
 
       queryClient.invalidateQueries(
         {
@@ -700,7 +711,7 @@ export function useUnfollowUser() {
 export function useSearchTop(query: string) {
   const timestamp = Math.floor(Date.now() / 1000);
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.SEARCH_POST_LIST, QUERY_KEYS.SEARCH_TOP, query],
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.SEARCH_TOP, query],
     queryFn: ({pageParam}) => searchTop(query, timestamp, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -712,12 +723,10 @@ export function useSearchTop(query: string) {
   });
 }
 
-
-
 export function useSearchLatest(query: string) {
   const timestamp = Math.floor(Date.now() / 1000);
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.SEARCH_POST_LIST, QUERY_KEYS.SEARCH_LATEST, query],
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.SEARCH_LATEST, query],
     queryFn: ({pageParam}) => searchLatest(query, timestamp, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -761,48 +770,42 @@ export function useSearchMedia(query: string) {
 
 export function useAddBookmark(postId: string) {
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbarContext();
+
   return useMutation({
     mutationFn: () => addBookmarkByPostId(postId),
     onSuccess: () => {
+      const content = (
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Added to your Bookmarks.
+        </Alert>
+      );
+
+      showSnackbar({props: { 
+        autoHideDuration: 3000, 
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
+
       queryClient.setQueriesData(
         {
           queryKey: [QUERY_KEYS.QUERY_POST_LIST],
         }
-        , (oldData: AugmentedPostPreview[] | undefined) => {
+        , (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
           if (!oldData) return;
 
-          return oldData.map((post) => {
-            if (post.id === postId) {
-              return {
-                ...post,
-                bookmarked: true,
-              };
-            }
+          const newData = {...oldData};
 
-            return post;
-          });
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST],
-        }
-        , (oldData: SearchTopResult | SearchLatestResult | undefined) => {
-          if (!oldData) return;
-
-          return {
-            ...oldData,
-            posts: oldData.posts.map((post) => {
+          newData.pages.forEach((page) => {
+            page.results.forEach((post) => {
               if (post.id === postId) {
-                return {
-                  ...post,
-                  bookmarked: true,
-                };
+                post.bookmarked = true;
+                post.bookmark_count += 1;
               }
+            });
+          });
 
-              return post;
-            }),
-          };
+          return newData;
         });
 
       queryClient.invalidateQueries(
@@ -817,6 +820,7 @@ export function useAddBookmark(postId: string) {
         return {
           ...oldData,
           bookmarked: true,
+          bookmark_count: oldData.bookmark_count + 1,
         };
       });
 
@@ -830,6 +834,7 @@ export function useAddBookmark(postId: string) {
               data: {
                 ...notification.data,
                 bookmarked: true,
+                bookmark_count: notification.data.bookmark_count + 1,
               }
             };
           }
@@ -843,48 +848,42 @@ export function useAddBookmark(postId: string) {
 
 export function useRemoveBookmark(postId: string) {
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbarContext();
+
   return useMutation({
     mutationFn: () => removeBookmarkByPostId(postId),
     onSuccess: () => {
+      const content = (
+        <Alert severity="success" sx={{ width: '100%' }}>
+          Removed from your Bookmarks.
+        </Alert>
+      );
+
+      showSnackbar({props: { 
+        autoHideDuration: 3000, 
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
+
       queryClient.setQueriesData(
         {
           queryKey: [QUERY_KEYS.QUERY_POST_LIST],
         }
-        , (oldData: AugmentedPostPreview[] | undefined) => {
+        , (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
           if (!oldData) return;
-
-          return oldData.map((post) => {
-            if (post.id === postId) {
-              return {
-                ...post,
-                bookmarked: false,
-              };
-            }
-
-            return post;
-          });
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_POST_LIST],
-        }
-        , (oldData: SearchTopResult | SearchLatestResult | undefined) => {
-          if (!oldData) return;
-
-          return {
-            ...oldData,
-            posts: oldData.posts.map((post) => {
+  
+          const newData = {...oldData};
+  
+          newData.pages.forEach((page) => {
+            page.results.forEach((post) => {
               if (post.id === postId) {
-                return {
-                  ...post,
-                  bookmarked: false,
-                };
+                post.bookmarked = false;
+                post.bookmark_count -= 1;
               }
-
-              return post;
-            }),
-          };
+            });
+          });
+  
+          return newData;
         });
 
       queryClient.setQueryData([QUERY_KEYS.GET_POST_BY_ID, postId], (oldData: IPost | undefined) => {
@@ -893,6 +892,7 @@ export function useRemoveBookmark(postId: string) {
         return {
           ...oldData,
           bookmarked: false,
+          bookmark_count: oldData.bookmark_count - 1,
         };
       });
 
@@ -919,6 +919,7 @@ export function useRemoveBookmark(postId: string) {
               data: {
                 ...notification.data,
                 bookmarked: false,
+                bookmark_count: notification.data.bookmark_count - 1,
               }
             };
           }
@@ -956,7 +957,7 @@ export function useGetNotifications() {
 export function useGetTopRatedPosts() {
   const timestamp = Math.floor(Date.now() / 1000);
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.GET_TOP_RATED_POSTS],
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS],
     queryFn: ({pageParam}) => getTopRatedPosts(timestamp, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {

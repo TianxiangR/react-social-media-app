@@ -53,23 +53,6 @@ function ProfileImageSelector({onChange, src}: ProfileImageSelectorProps) {
     onChange?.(file);
   };
 
-  // const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-  //   const {width, height} = e.currentTarget;
-  //   console.log(width, height);
-  //   const crop = makeAspectCrop(
-  //     {
-  //       unit: '%',
-  //       width: Math.min(width, height)
-  //     },
-  //     1,
-  //     width,
-  //     height
-  //   );
-
-  //   const centeredCrop = centerCrop(crop, width, height);
-  //   setCrop(centeredCrop);
-  // };
-
   const handleApply = (data: string) => {
     setImageData(data);
     setOpen(false);

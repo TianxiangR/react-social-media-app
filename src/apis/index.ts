@@ -5,8 +5,6 @@ import { AugmentedPostPreview, IPost, IPostPreview, NewPost, NewUser, Notificati
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
-console.log('baseUrl', baseUrl);
-
 export async function createUser(user: NewUser): Promise<TokenResponse> {
 
   const formData = getFormDataFromObject(user);
@@ -76,8 +74,6 @@ export async function publicQueryUser(query: Record<string, string | number | bo
 export async function createPost(post: NewPost): Promise<AugmentedPostPreview> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
   const formData = getFormDataFromObject(post);
-  console.log(formData.get('content'));
-  
 
   const response = await fetch(`${baseUrl}/api/posts/`, {
     method: 'POST',
