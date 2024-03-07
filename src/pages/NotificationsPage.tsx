@@ -5,6 +5,7 @@ import FollowPreview from '@/components/shared/FollowPreview';
 import LikePreview from '@/components/shared/LikePreview';
 import Loader from '@/components/shared/Loader';
 import PostPreview from '@/components/shared/PostPreview';
+import ReplyPreview from '@/components/shared/ReplyPreview';
 import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
@@ -54,7 +55,7 @@ function NotificationsPage() {
             if (notification.type === 'repost' || notification.type === 'reply') {
               return (
                 <li key={notification.id}>
-                  <PostPreview {...notification.data} />
+                  <PostPreview post={notification.data} />
                 </li>
               );
             }

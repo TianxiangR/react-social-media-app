@@ -1,10 +1,13 @@
 import CloseIcon from '@mui/icons-material/Close';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
-import React, { useEffect,useRef, useState } from 'react';
+import { Alert, Slide, type SlideProps } from '@mui/material';
+import React, { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 import { useUserContext } from '@/context/AuthContext';
-import { useCreatePost, useReplyPostById } from '@/react-query/queriesAndMutations';
-import { UserPreview } from '@/types';
+import { useSnackbarContext } from '@/context/SnackbarContext';
+import { useCreatePost} from '@/react-query/queriesAndMutations';
+import { AugmentedPostPreview, UserPreview } from '@/types';
 
 import { Button } from '../ui/button';
 import IconButton from './IconButton';
@@ -27,6 +30,16 @@ function CreatePostForm() {
   const {user} = useUserContext();
   const { mutateAsync: createPost } = useCreatePost();
 
+  const clearInput = () => {
+    setInputText('');
+    setImageUrls([]);
+    setImageFiles([]);
+  };
+
+  const mutateSuccess = (data: AugmentedPostPreview) => {
+    clearInput();
+  };
+
   const focusOnInput = () => { 
     inputRef.current?.focus();
   };
@@ -44,18 +57,14 @@ function CreatePostForm() {
     }
   };
 
-  const clearInput = () => {
-    setInputText('');
-    setImageUrls([]);
-    setImageFiles([]);
-  };
+
 
   const handleInputTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
   };
 
   const handleCreatePost = async () => {
-    createPost( { content: inputText, images: imageFiles }, {onSuccess: clearInput});
+    createPost( { content: inputText, images: imageFiles }, {onSuccess: mutateSuccess});
   };
 
   return (

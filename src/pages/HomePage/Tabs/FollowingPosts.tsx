@@ -3,16 +3,13 @@ import { useInView } from 'react-intersection-observer';
 
 import CreatePostForm from '@/components/shared/CreatePostForm';
 import PostPreview from '@/components/shared/PostPreview';
-import { useGlobalContext } from '@/context/GlobalContext';
 import { useGetPosts } from '@/react-query/queriesAndMutations';
-import { AugmentedPostPreview } from '@/types';
 
 import Loader from '../../../components/shared/Loader';
 
 
 function FollowingPosts() {
-  const globalContext = useGlobalContext();
-  const { data: response, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = globalContext.home.following.queryResults;
+  const { data: response, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = useGetPosts();
   const [ref, inView] = useInView();
 
   useEffect(() => {
@@ -20,6 +17,10 @@ function FollowingPosts() {
       fetchNextPage();
     }
   }, [inView]);
+
+  useEffect(() => {
+    console.log(response);
+  }, [response]);
 
 
   const renderPosts = () => {
@@ -35,7 +36,7 @@ function FollowingPosts() {
         if (index === posts.length - 5) {
           return (
             <li key={post.id} className="w-full" ref={ref}>
-              <PostPreview {...post} />
+              <PostPreview post={post} />
             </li>
           );
         }
@@ -43,7 +44,7 @@ function FollowingPosts() {
         return (
           <>
             <li key={post.id} className="w-full">
-              <PostPreview {...post} />
+              <PostPreview post={post} />
             </li>
           </>
         );

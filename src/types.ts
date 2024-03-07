@@ -53,12 +53,12 @@ export type IPostPreview = {
   repost_count: number;
   comment_count: number;
   view_count: number;
-};
-
-export type AugmentedPostPreview = IPostPreview & {
+  bookmark_count: number;
   repost_parent?: IPostPreview;
   reply_parent?: IPostPreview;
 };
+
+export type AugmentedPostPreview = IPostPreview;
 
 export type NewPost = {
   content: string;
@@ -156,4 +156,9 @@ export type Page<T> = {
   results: T[];
   count: number;
   total_pages: number;
+}
+
+export type PostMeta = {
+  post: AugmentedPostPreview;
+  variant: 'normal' | 'top' | 'middle' | 'bottom';
 }

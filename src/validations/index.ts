@@ -9,7 +9,6 @@ export const signInSchema = z.object({
 
 const emailSchema = z.string().email().refine(async (email) => {
   const response = await publicQueryUser({ email });
-  console.log(!response?.found);
   return !response?.found ;
 }, 'This email is already in use');
 

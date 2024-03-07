@@ -42,14 +42,14 @@ function Latest() {
               if (index === posts.length - 5) {
                 return (
                   <li key={post.id} ref={ref}>
-                    <PostPreview {...post} />
+                    <PostPreview post={post} />
                   </li>
                 );
               }
 
               return (
                 <li key={post.id}>
-                  <PostPreview {...post} />
+                  <PostPreview post={post} />
                 </li>
               );
             })

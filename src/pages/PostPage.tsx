@@ -7,6 +7,7 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
+import Avatar from '@/components/shared/Avatar';
 import IconButton from '@/components/shared/IconButton';
 import ImageView from '@/components/shared/ImageView';
 import Loader from '@/components/shared/Loader';
@@ -22,6 +23,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useUserContext } from '@/context/AuthContext';
 import useHideOnScroll from '@/hooks/useHideOnScroll';
+import { formatDetailedDateString } from '@/lib/utils';
 import { useDeletePostById, useFollowUser, useGetPostById, useUnfollowUser } from '@/react-query/queriesAndMutations';
 
 function PostPage() {
@@ -95,7 +97,7 @@ function PostPage() {
             <div className="flex justify-between">
               {/* top */}
               <div className="flex gap-2 items-center">
-                <img src={author.profile_image} alt="avatar" className='w-[40px] h-[40px] rounded-full'/>
+                <Avatar src={author.profile_image} size={40} />
                 <div className='flex h-fit flex-col justify-center'>
                   <Link to={`/${author.username}`}><span className="font-bold text-base hover:underline">{author.name}</span></Link>
                   <span className="text-[#75828d] text-base">@{author.username}</span>
@@ -162,21 +164,20 @@ function PostPage() {
                   </div>
                 )
               }
+              <time className="text-[#536471] text-base">{formatDetailedDateString(created_at)}</time>
             </div>
-
-            <div className="mt-4 px-1 py-2 border-[#eff3f4] border-y-[1px]">
+            <hr className="mt-4 border-[#eff3f4] border-[1px]" />
+            <div className="px-1 py-3 ">
               <PostDetailStats {...post} />
             </div>
-
-            <div className="mt-2">
-              <ReplyPostForm postId={postId} author={author} />
-            </div>
+            <hr className="mb-2 border-[#eff3f4] border-[1px]" />
+            <ReplyPostForm postId={postId} author={author} />
           </div>
 
           <ul className='flex flex-col post-list'>
             {replies.map((reply) => (
               <li key={reply.id}>
-                <PostPreview {...reply} />
+                <PostPreview post={reply} />
               </li>
             ))}
           </ul>

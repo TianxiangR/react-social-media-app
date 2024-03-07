@@ -60,7 +60,6 @@ function SignUp() {
   });
 
   const handleNext = (value: z.infer<typeof signUpPart1Schema> | z.infer<typeof signUpPart2Schema>) => {
-    console.log(value);
     setFormData({...formData, ...value});
     setFormIndex((prev) => prev + 1);
   };
@@ -207,7 +206,7 @@ function SignUp() {
                         <DatePicker
                           start={new Date(1900, 0, 1)}
                           end={new Date()}
-                          onChange={(date: Date) => {const value = date.toISOString().split('T')[0]; field.onChange(value); console.log(value); return value;}}
+                          onChange={(date: Date) => {const value = date.toISOString().split('T')[0]; field.onChange(value); return value;}}
                         />
                       </FormControl>
                       <FormMessage />

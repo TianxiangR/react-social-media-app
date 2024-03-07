@@ -69,14 +69,14 @@ function Top({setCurrentTab}: {setCurrentTab: (tab: string) => void}){
                       if (index === posts.length - 5) {
                         return (
                           <li key={post.id} className="w-full" ref={ref}>
-                            <PostPreview {...post} />
+                            <PostPreview post={post} />
                           </li>
                         );
                       }
                     
                       return (
                         <li key={post.id} className="w-full">
-                          <PostPreview {...post} />
+                          <PostPreview post={post} />
                         </li>
                       );
                     })

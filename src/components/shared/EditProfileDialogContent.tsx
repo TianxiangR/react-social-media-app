@@ -179,9 +179,9 @@ function ProfileImageFormItem({ profile_image, field }:  {
   return (
     <FormItem>
       <FormControl>
-        <div className="">
+        <div className="w-full">
           {/* profile image */}
-          <div className="p-1 bg-white rounded-full w-[120px] h-[120px] mt-[-8%] z-10 relative box-border">
+          <div className="p-1 bg-white rounded-full aspect-square w-[20%] mt-[-11%] z-10 relative box-border">
             <img src={imageSrc} alt="avatar" className="w-full h-full rounded-full"/>
             <div className="top-[50%] left-[50%] absolute rounded-full" 
               style={{
@@ -251,7 +251,6 @@ function EditProfileDialogContent(props: User ) {
   function onSubmit(values: z.infer<typeof formSchema>) {
     const { month, day, year, profile_image, header_photo, ...rest } = values;
     const date_of_birth = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    console.log(date_of_birth);
     const profile: Partial<UserProfile> = { ...rest, date_of_birth };
     if (profile_image) {
       profile.profile_image = profile_image;
@@ -260,8 +259,6 @@ function EditProfileDialogContent(props: User ) {
     if (header_photo) {
       profile.header_photo = header_photo;
     }
-
-    console.log(profile);
     updateProfile(profile).then(handleOnSuccess);
   }
 

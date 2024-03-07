@@ -34,7 +34,6 @@ export function getYears(start: Date, end: Date): string[] {
 }
 
 export function setCanvasPreview(canvas: HTMLCanvasElement, image: HTMLImageElement, crop: PixelCrop) {
-  console.log(crop);
   const ctx = canvas.getContext('2d');
   if (ctx) {
     
@@ -191,3 +190,18 @@ export const multiFormatDateString = (timestamp: string = ''): string => {
 export function countNonWhiteSpaceCharacters(text: string) {
   return text.replace(/\s/g, '').length;
 } 
+
+export function formatDetailedDateString(dateString: string) {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  };
+  const formattedDate = date.toLocaleDateString('en-US', options);
+  const tokens = formattedDate.split(',');
+  return tokens[2] + ' · ' + tokens[0] + ', ' + tokens[1];
+}
