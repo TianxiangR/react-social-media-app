@@ -49,6 +49,12 @@ function PostDetailStats(props: IPostPreview) {
   const { openDialog } = useGlobalContext().dialog;
   const hasShareAPI = !!navigator.share;
   const { showSnackbar } = useSnackbarContext();
+  
+  const { mutateAsync: likePost } = useLikePost(id);
+  const { mutateAsync: unlikePost } = useUnlikePost(id);
+  const { mutateAsync: addBookmark } = useAddBookmark(id);
+  const { mutateAsync: removeBookmark } = useRemoveBookmark(id);
+
 
   const onLikeSuccess = () => {
     setLiked(true);
@@ -68,10 +74,10 @@ function PostDetailStats(props: IPostPreview) {
     }
   };
 
-  const { mutateAsync: likePost } = useLikePost(id);
-  const { mutateAsync: unlikePost } = useUnlikePost(id);
-  const { mutateAsync: addBookmark } = useAddBookmark(id);
-  const { mutateAsync: removeBookmark } = useRemoveBookmark(id);
+  const handleCommentClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    openDialog(() => <PostDialogContent variant='reply' parent_post={props}/>);
+  };
 
   const handleQuoteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -131,7 +137,7 @@ function PostDetailStats(props: IPostPreview) {
     <div className='flex justify-between items-center group/comment w-full'>
       <div className="flex flex-1 justify-start">
         <div className="flex justify-start items-center group gap-1.5 hover:cursor-pointer">
-          <IconButton className="text-[#536471] group-hover:text-blue text-xl">
+          <IconButton className="text-[#536471] group-hover:text-blue text-xl" onClick={handleCommentClick}>
             <ChatBubbleOutlineIcon sx={{fontSize: '1.25rem'}}/>
           </IconButton>
           <span className="text-sm group-hover:text-blue select-none">{comment_count || ''}</span>
