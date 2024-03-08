@@ -75,9 +75,7 @@ function GlobalContextProvider({children}: {children: ReactNode}) {
       <Dialog open={openDialog} fullScreen={fullScreen || responsiveFullScreen}>
         {dialogRenderer()}
       </Dialog>
-      <Drawer open={openDrawer} onClose={() => setOpenDrawer(false)}>
-        <LeftDrawer />
-      </Drawer>
+      <LeftDrawer open={openDrawer} onClose={() => setOpenDrawer(false)}/>
     </GlobalContext.Provider>
   );
 }
