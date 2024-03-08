@@ -183,7 +183,7 @@ function ProfileImageFormItem({ profile_image, field }:  {
         <div className="w-full">
           {/* profile image */}
           <div className="p-1 bg-white rounded-full aspect-square w-[20%] mt-[-11%] z-10 relative box-border">
-            <img src={imageSrc} alt="avatar" className="w-full h-full rounded-full"/>
+            <img src={imageSrc} alt="avatar" className="rounded-full"/>
             <div className="top-[50%] left-[50%] absolute rounded-full" 
               style={{
                 backgroundColor: 'rgba(0, 0, 0, 0.4)', 
