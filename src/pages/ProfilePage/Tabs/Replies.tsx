@@ -25,7 +25,7 @@ function UserReplies({ username }: UserPostsProps) {
     }
   }, [inView]);
 
-  const preprocessPosts = (posts: AugmentedPostPreview[]): PostMeta[] => {
+  const preprocessPosts = (posts: AugmentedPostPreview[]): Array<PostMeta[]> => {
     const map: Map<string, ListNode> = new Map();
     const heads: Array<ListNode> = [];
     const groups: Array<Array<AugmentedPostPreview>> = [];
@@ -44,14 +44,11 @@ function UserReplies({ username }: UserPostsProps) {
             node.next = newNode;
           }
         } 
-        else if (parent.author.id !== post.author.id) {
+        else {
           const parentNode = new ListNode(parent);
           parentNode.next = newNode;
           heads.push(parentNode);
           map.set(parent.id, parentNode);
-        }
-        else {
-          heads.push(newNode);
         }
       } else {
         heads.push(newNode);
@@ -94,7 +91,7 @@ function UserReplies({ username }: UserPostsProps) {
           variant,
         };
       });
-    }).flat();
+    });
   };
 
   const renderPosts = () => {
@@ -104,19 +101,33 @@ function UserReplies({ username }: UserPostsProps) {
       return <div>Failed to load posts</div>;
     } else if (data) {
       const posts = data.pages.map((page) => page.results).flat();
-      const postMetas = preprocessPosts(posts);
-      return postMetas.map((postMeta, index) => {
-        if (index === posts.length - 5) {
-          return (
-            <li key={postMeta.post.id} className="w-full" ref={ref}>
-              <PostPreview {...postMeta} />
-            </li>
-          );
-        }
-      
+      let i = 0;
+      const postGroups = preprocessPosts(posts);
+      const actualLength = postGroups.flat().length;
+      return postGroups.map((group) => {
         return (
-          <li key={postMeta.post.id} className="w-full">
-            <PostPreview {...postMeta} />
+          <li key={i} className="w-full h-full">
+            <ul className="flex flex-col">
+              {
+                group.map((post) => {
+                  i++;
+                  if (i === actualLength - 5) {
+                    return (
+                      <li key={i} ref={ref}>
+                        <PostPreview post={post.post} variant={post.variant} />
+                      </li>
+                    );
+                  }
+                  else {
+                    return (
+                      <li key={i}>
+                        <PostPreview post={post.post} variant={post.variant} />
+                      </li>
+                    );
+                  }
+                })
+              }
+            </ul>
           </li>
         );
       });
@@ -128,7 +139,8 @@ function UserReplies({ username }: UserPostsProps) {
     <ul className="flex flex-col w-full h-full post-list">
       {renderPosts()}
       {
-        isFetchingNextPage && <Loader />
+        isFetchingNextPage && 
+          <Loader />
       }
     </ul>
   );

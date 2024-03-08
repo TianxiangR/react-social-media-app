@@ -24,7 +24,7 @@ function Top({setCurrentTab}: {setCurrentTab: (tab: string) => void}){
   const renderTop = () => {
     if ((isPendingPosts || isPendingPeople) && (!postData || !peopleData)) {
       return (
-        <div className="mt-10">
+        <div>
           <Loader />
         </div>
       );
@@ -83,9 +83,7 @@ function Top({setCurrentTab}: {setCurrentTab: (tab: string) => void}){
                   }
                   {
                     isFetchingNextPage && (
-                      <li className="w-full">
-                        <Loader />
-                      </li>
+                      <Loader />
                     )
                   }
                 </ul>

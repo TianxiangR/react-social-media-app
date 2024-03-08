@@ -1,5 +1,4 @@
 import XIcon from '@mui/icons-material/X';
-import { useMediaQuery } from '@mui/material';
 import React, { useEffect, useRef, useState } from 'react';
 
 import CreatePostForm from '@/components/shared/CreatePostForm';
@@ -7,6 +6,7 @@ import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
 import useHideOnScroll from '@/hooks/useHideOnScroll';
+import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import FollowingPosts from '@/pages/HomePage/Tabs/FollowingPosts';
 
 import ForYouPosts from './Tabs/ForYou';
@@ -16,29 +16,12 @@ function Home() {
   const { currentTab, setCurrentTab } = globalContext.home;
   const { user } = useUserContext();
   const { openDrawer } = useGlobalContext().drawer;
-  const shouldHide = useMediaQuery('(max-width: 768px)');
-  const fakeRef = useRef(null);
+  const shouldHide = useIsPhoneScreen();
   const ref = useRef(null);
-  const [scrollPos, setScrollPos] = useState(0);
-  useHideOnScroll(shouldHide ? ref : fakeRef, scrollPos);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollPos(window.scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  
+  useHideOnScroll(shouldHide ? ref : undefined);
 
   return (
     <div className="h-full w-full flex flex-col">
-
       <TabContext value={currentTab}>
         <div className='sticky-bar top-0 z-10' ref={ref}>
           <div className="flex md:hidden w-full h-[53px] flex-row justify-between items-center px-4 py-2">

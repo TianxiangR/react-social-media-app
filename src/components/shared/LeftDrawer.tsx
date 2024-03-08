@@ -20,13 +20,13 @@ function LeftDrawer() {
         <h2 className='text-[20px] font-bold mt-2'>{user?.name}</h2>
         <span className='text-[#75828d] text-base'>@{user?.username}</span>
         <div className="flex w-full mt-4">
-          <Link className="flex mr-4 hover:underline whitespace-pre-wrap" to={''}>
+          <Link className="flex mr-4 hover:underline whitespace-pre-wrap" to={`/${user?.username}/following`}>
             <span className="text-sm text-[#0f1419] font-bold">{user?.following}</span>
             <span className="text-sm text-[#536471]"> Following</span>
           </Link>
-          <Link className="flex hover:underline whitespace-pre-wrap" to={''}>
+          <Link className="flex hover:underline whitespace-pre-wrap" to={`/${user?.username}/followers`}>
             <span className="text-sm text-[#0f1419] font-bold">{user?.followers}</span>
-            <span className="text-sm text-[#536471] "> Followers</span>
+            <span className="text-sm text-[#536471] "> Follower{user?.followers !== 1 ? 's' : ''}</span>
           </Link>
         </div>
       </div>

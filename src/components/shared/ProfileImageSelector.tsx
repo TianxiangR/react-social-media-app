@@ -4,11 +4,12 @@ import './ReactCrop.css';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
-import { Dialog, useMediaQuery } from '@mui/material';
+import { Dialog } from '@mui/material';
 import React, {useCallback, useEffect,useRef,useState} from 'react';
 import {FileWithPath, useDropzone} from 'react-dropzone';
 import ReactCrop, { centerCrop, convertToPixelCrop,type Crop, makeAspectCrop, type PercentCrop, type PixelCrop } from 'react-image-crop';
 
+import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import { base64StringtoFile, extractImageFileExtensionFromBase64, image64ToCanvasRef, setCanvasPreview } from '@/lib/utils';
 
 import { Button } from '../ui/button';
@@ -26,7 +27,7 @@ function ProfileImageSelector({onChange, src}: ProfileImageSelectorProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [open, setOpen] = useState(false);
-  const fullScreen = useMediaQuery('(max-width: 768px)');
+  const fullScreen = useIsPhoneScreen();
 
   const onDrop = useCallback((acceptedFiles: FileWithPath[]) => {
     const newFile = acceptedFiles[0];

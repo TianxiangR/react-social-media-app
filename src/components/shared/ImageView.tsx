@@ -42,10 +42,10 @@ function ImageView({images, size, rounded, allowFullScreen}: ImageViewProps) {
     );
   }
 
-  let baseClassName = 'overflow-hidden gap-[2px] max-h-[288px] h-[288px] w-full' + (rounded ? ' rounded-2xl' : '');
+  let baseClassName = 'overflow-hidden gap-[2px] max-h-[288px] h-full w-full' + (rounded ? ' rounded-2xl' : '');
 
   if (size === 'large') {
-    baseClassName = ' overflow-hidden gap-[2px] max-h-[300px] h-[300px] w-full' + (rounded ? ' rounded-2xl' : '');
+    baseClassName = ' overflow-hidden gap-[2px] max-h-[300px] h-full w-full' + (rounded ? ' rounded-2xl' : '');
   }
 
   if (images.length === 2) {

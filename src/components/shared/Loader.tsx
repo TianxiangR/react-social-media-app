@@ -3,8 +3,8 @@ import React from 'react';
 
 function Loader() {
   return (
-    <div className="flex justify-center items-center h-full w-full">
-      <CircularProgress color="primary" />
+    <div className="flex w-full py-10 justify-center items-center">
+      <CircularProgress color="primary" size={30} />
     </div>
   );
 }

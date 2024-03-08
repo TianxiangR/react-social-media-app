@@ -54,6 +54,7 @@ export type IPostPreview = {
   comment_count: number;
   view_count: number;
   bookmark_count: number;
+  reposted: boolean;
   repost_parent?: IPostPreview;
   reply_parent?: IPostPreview;
 };

@@ -1,4 +1,4 @@
-import { Dialog, Drawer, useMediaQuery, useTheme } from '@mui/material';
+import { Dialog, Drawer } from '@mui/material';
 import { InfiniteData, UseInfiniteQueryResult, type UseQueryResult } from '@tanstack/react-query';
 import React, { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { set } from 'zod';
@@ -7,8 +7,9 @@ import PostDialogContent from '@/components/shared/CreatePostDialogContent';
 import CustomDialog from '@/components/shared/CustomDialog';
 import FullScreenImageView from '@/components/shared/FullScreenImageView';
 import LeftDrawer from '@/components/shared/LeftDrawer';
+import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import { runMicroTask } from '@/lib/utils';
-import { useGetPosts, useGetTopRatedPosts } from '@/react-query/queriesAndMutations';
+import { useGetFollowingPosts, useGetTopRatedPosts } from '@/react-query/queriesAndMutations';
 import { AugmentedPostPreview, DialogType, GlobalState, HomeTab, IPostPreview, Page, ProfileTab } from '@/types';
 
 const INITIAL_GLOBAL_STATE: GlobalState = {
@@ -46,14 +47,14 @@ function GlobalContextProvider({children}: {children: ReactNode}) {
   const emptyRenderer = () => <></>;
   const [dialogRenderer, setDialogRenderer] = useState<() => ReactNode>(() => emptyRenderer);
   const [fullScreen, setFullScreen] = useState(false);
-  const following_query_results = useGetPosts();
-  const for_you_query_results = useGetTopRatedPosts();
+  // const following_query_results = useGetFollowingPosts();
+  // const for_you_query_results = useGetTopRatedPosts();
   const context = {...INITIAL_GLOBAL_STATE};
-  const responsiveFullScreen = useMediaQuery('@media (max-width:768px)');
+  const responsiveFullScreen = useIsPhoneScreen();
   context.home.currentTab = homeTab;
   context.home.setCurrentTab = setHomeTab;
-  context.home.following.queryResults = following_query_results;
-  context.home.for_you.queryResults = for_you_query_results;
+  // context.home.following.queryResults = following_query_results;
+  // context.home.for_you.queryResults = for_you_query_results;
   context.profile.currentTab = profileTab;
   context.profile.setCurrentTab = setProfileTab;
   context.dialog.openDialog = (renderer: () => ReactNode, options) => {

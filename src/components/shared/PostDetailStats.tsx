@@ -5,7 +5,9 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import IosShareIcon from '@mui/icons-material/IosShare';
+import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
 import RepeatIcon from '@mui/icons-material/Repeat';
+import { Alert, Slide, SlideProps } from '@mui/material';
 import React, { useState } from 'react';
 
 import {
@@ -15,11 +17,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useGlobalContext } from '@/context/GlobalContext';
+import { useSnackbarContext } from '@/context/SnackbarContext';
 import { useAddBookmark, useLikePost , useRemoveBookmark, useRepostPostById, useUnlikePost } from '@/react-query/queriesAndMutations';
 import { IPostPreview } from '@/types';
 
 import PostDialogContent from './CreatePostDialogContent';
 import IconButton from './IconButton';
+
+function SlideUp(props: SlideProps) {
+  return (
+    <Slide direction="up" {...props} />
+  );
+}
 
 export interface PostStatsProps {
   id: string;
@@ -30,12 +39,16 @@ export interface PostStatsProps {
   view_count: number;
   bookmarked: boolean;
 }
+
+
 function PostDetailStats(props: IPostPreview) {
   const {id, liked: initial_liked, like_count: initial_like_count, comment_count, repost_count, view_count, bookmarked, bookmark_count} = props;
   const [liked, setLiked] = useState(initial_liked);
   const [like_count, setLikeCount] = useState(initial_like_count);
   const { mutateAsync: repost} = useRepostPostById(id);
   const { openDialog } = useGlobalContext().dialog;
+  const hasShareAPI = !!navigator.share;
+  const { showSnackbar } = useSnackbarContext();
 
   const onLikeSuccess = () => {
     setLiked(true);
@@ -76,6 +89,40 @@ function PostDetailStats(props: IPostPreview) {
       removeBookmark();
     } else {
       addBookmark();
+    }
+  };
+
+  const copyLinkSuccess = <Alert severity="info">Copied to clipboard</Alert>;
+
+  const handleCopyLinkClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(`${window.location.origin}/${props.author.username}/status/${id}`);
+    showSnackbar({
+      props: {
+        autoHideDuration: 3000, 
+        TransitionComponent: SlideUp,
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+      }, 
+      content: copyLinkSuccess
+    });
+  };
+
+  const shareFail = <Alert severity="error">Failed to share</Alert>;
+  const handleShareClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (hasShareAPI) {
+      navigator
+        .share({title: 'Share', url: `${window.location.origin}/${props.author.username}/status/${id}`})
+        .catch(() => {
+          showSnackbar({
+            props: {
+              autoHideDuration: 3000, 
+              TransitionComponent: SlideUp,
+              anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+            }, 
+            content: shareFail
+          });
+        });
     }
   };
 
@@ -135,9 +182,30 @@ function PostDetailStats(props: IPostPreview) {
       </div>
 
       <div className="flex justify-start items-center gap-3">
-        <IconButton className="text-[#536471] hover:text-blue text-xl">
-          <IosShareIcon sx={{fontSize: '1.4rem'}}/>
-        </IconButton>
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger onClick={(e) => e.stopPropagation()}>
+            <IconButton className="text-[#536471] hover:text-blue text-xl">
+              <IosShareIcon sx={{fontSize: '1.4rem'}}/>
+            </IconButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="rounded-2xl p-0">
+            <DropdownMenuItem className="py-2 px-4 hover:cursor-pointer h-[44px]" onClick={handleCopyLinkClick}>
+              <div className="flex gap-2">
+                <LinkOutlinedIcon sx={{fontSize: '1.4rem', transform: 'rotate(-45deg)'}}/>
+                <span className="text-base font-bold">Copy link</span>
+              </div>
+            </DropdownMenuItem>
+            {
+              hasShareAPI && 
+              <DropdownMenuItem className="py-2 px-4 hover:cursor-pointer h-[44px]" onClick={handleShareClick}>
+                <div className="flex gap-2">
+                  <IosShareIcon sx={{fontSize: '1.4rem'}}/>
+                  <span className="text-base font-bold">Share</span>
+                </div>
+              </DropdownMenuItem>
+            }
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
