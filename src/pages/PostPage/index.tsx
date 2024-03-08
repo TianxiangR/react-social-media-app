@@ -21,7 +21,7 @@ function PostPage() {
   useHideOnScroll(shouldHide ? ref : undefined);
 
   const jumpToPost = (post: IPostPreview) => {
-    navigate(`/${post.author.username}/status/${post.author.id}`);
+    navigate(`/${post.author.username}/status/${post.id}`);
   };
 
   useEffect(() => {

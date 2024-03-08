@@ -50,7 +50,7 @@ function PostPreview(props: PostPreviewProps) {
   };
     
   const handleClick = () => {
-    navigate(`/${author.username}/status/${post.id}`);
+    navigate(`/${post.author.username}/status/${post.id}`);
   };
   
   const handleDeletPost = (e: React.MouseEvent) => {
