@@ -2,7 +2,7 @@
 import CreateOutlinedIcon from '@mui/icons-material/CreateOutlined';
 import MoreHorizOutlinedIcon from '@mui/icons-material/MoreHorizOutlined';
 import XIcon from '@mui/icons-material/X';
-import React, {  useState } from 'react';
+import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import {
@@ -15,6 +15,7 @@ import { routeConfig } from '@/configs';
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
+import { useGetNotifications } from '@/react-query/queriesAndMutations';
 
 import { Button } from '../ui/button';
 import PostDialogContent from './CreatePostDialogContent';
@@ -24,6 +25,8 @@ function LeftNavBar() {
   const { openDialog } = useGlobalContext().dialog;
   const {user} = useUserContext();
   const navigate = useNavigate();
+  const { data } = useGetNotifications();
+  const unread_count = data?.filter((notification) => !notification.read).length || 0;
 
   const logout = () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -51,11 +54,23 @@ function LeftNavBar() {
           const isActive = pathname === route.path || pathname === route.path + '/' || (route.path === '/:username' && (pathname === `/${user?.username}` || pathname === `/${user?.username}/`) );
           const Icon = isActive ? route.meta.icon.active : route.meta.icon.inactive;
           const path = route.path === '/:username' ? `/${user?.username}` : route.path;
+          const isNotification = route.label === 'Notifications';
 
           return (
             <li key={route.label} className="flex w-fit">
               <Link to={path} className="flex items-center gap-3 w-[auto] rounded-full p-2.5 hover:bg-[#e7e7e8] select-none">
-                <Icon sx={{fontSize: '28px'}}/>
+                <div className="relative">
+                  <Icon sx={{fontSize: '28px'}}/>
+                  {
+                    isNotification && unread_count > 0 && 
+                    <div 
+                      className="absolute rounded-full bg-blue border-white border-[1px] top-0 right-0 translate-x-[calc(100%-12px)] -translate-y-[33%]
+                    justify-center flex items-center text-white text-xs leading-3 px-[3px] py-[2px] min-h-[18px] min-w-[18px] font-bold"
+                    >
+                      {unread_count > 99 ? '99+' : unread_count}
+                    </div>
+                  }
+                </div>
                 <span className={`${isActive ? 'text-black font-bold' : 'text-[#0f1419]'} text-[20px] select-none hidden lg:flex`}>
                   {route.label}
                 </span>
@@ -64,7 +79,7 @@ function LeftNavBar() {
           );
         }
         )}
-        <li className="w-fit lg:w-full">
+        <li className="w-fit lg:w-full mt-2">
           <Button className="w-fit size-12 lg:w-[233px] bg-blue rounded-full hover:bg-blue-100" onClick={handlePostClick}>
             <div className="flex lg:hidden">
               <CreateOutlinedIcon sx={{fontSize: '24px'}}/>

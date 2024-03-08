@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import AddAPhotoOutlinedIcon from '@mui/icons-material/AddAPhotoOutlined';
 import ClearIcon from '@mui/icons-material/Clear';
 import CloseIcon from '@mui/icons-material/Close';
-import { Dialog, Input, TextField, useMediaQuery } from '@mui/material';
+import { Dialog, Input, TextField  } from '@mui/material';
 import { profile } from 'console';
 import React, {useEffect, useRef, useState} from 'react';
 import { type ControllerFieldState, type ControllerRenderProps, useForm, type UseFormStateReturn } from 'react-hook-form';
@@ -18,6 +18,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useGlobalContext } from '@/context/GlobalContext';
+import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import { base64StringtoFile, extractImageFileExtensionFromBase64 } from '@/lib/utils';
 import { useUpdateProfile } from '@/react-query/queriesAndMutations';
 import { User, UserProfile } from '@/types';
@@ -78,7 +79,7 @@ function HeaderPhotoFormItem({ header_photo, field }:  {
   };
 
   const imageSrc = imageData || originalSrc;
-  const diaglogFullScreen = useMediaQuery('@media (max-width:768px)');
+  const diaglogFullScreen = useIsPhoneScreen();
 
   return (
     <FormItem>
@@ -174,7 +175,7 @@ function ProfileImageFormItem({ profile_image, field }:  {
   };
 
   const imageSrc = imageData || profile_image;
-  const diaglogFullScreen = useMediaQuery('@media (max-width:768px)');
+  const diaglogFullScreen = useIsPhoneScreen();
 
   return (
     <FormItem>

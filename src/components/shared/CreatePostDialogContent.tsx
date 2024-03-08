@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
 import { useSnackbarContext } from '@/context/SnackbarContext';
-import { countNonWhiteSpaceCharacters } from '@/lib/utils';
+import { countNonWhiteSpaceCharacters, formatDateString } from '@/lib/utils';
 import { useCreatePost, useReplyPostById, useRepostPostById } from '@/react-query/queriesAndMutations';
 import { AugmentedPostPreview, IPostPreview } from '@/types';
 
@@ -103,11 +103,41 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
         </Button>
       </div>
 
+      {/* repost parent */}
+      {
+        variant === 'reply' && parent_post &&
+        <div className="flex p-4 gap-2 box-border">
+          <div className="relative shrink-0">
+            <img src={parent_post.author.profile_image} className="profile-image"/>
+            <div className='absolute top-0 left-1/2 transform -translate-x-1/2 translate-y-[calc(40px+0.25rem)] h-[calc(100%-40px+0.5rem)] w-[2px] bg-[#cfd9de]'/>
+          </div>
+          <div className="flex flex-col">
+            <span>
+              <span className="font-bold">{parent_post.author.name}</span>
+              <span className="text-[#536471]"> @{parent_post.author.username}</span>
+              <time className="text-[#536471]"> · {formatDateString(parent_post.created_at)}</time>
+            </span>
+            <p>
+              {parent_post.content}
+            </p>
+            <div className='mt-4'>
+              Replying to <span className="text-[#1d9bf0]">@{parent_post.author.username}</span>
+            </div>
+          </div>
+        </div>
+      }
+
       {/* Input Area */}
-      <div className="w-full gap-3 p-4 box-border flex hover:cursor-text"
+      <div className="w-full gap-2 p-4 box-border flex hover:cursor-text"
         onClick={focusOnInput}
       >
-        <img src={user?.profile_image} className="profile-image" />
+        <div className="relative shrink-0">
+          <img src={user?.profile_image} className="profile-image" />
+          {
+            variant === 'reply' && parent_post &&
+           <div className='absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-[calc(100%+0.25rem)] h-[calc(1rem)] w-[2px] bg-[#cfd9de]'/>
+          }
+        </div>
         <div className="grow min-h-[100px] text-[20px] max-w-[510px] flex flex-col gap-4">
           <TextArea 
             className="outline-none text-xl w-full" 

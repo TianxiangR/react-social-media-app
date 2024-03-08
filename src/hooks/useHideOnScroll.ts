@@ -1,11 +1,12 @@
-import { isCancelledError } from '@tanstack/react-query';
-import React, { useEffect, useRef } from 'react';
 
-const useHideOnScroll = (ref: React.RefObject<HTMLElement>, scrollPos: number) => {
+import { RefObject, useEffect, useRef, useState } from 'react';
+
+const useHideOnScroll = (ref?: RefObject<HTMLElement>) => {
   const prevScrollPos = useRef(0);
   const isScrollingDown = useRef(false);
   const firstScrollDown = useRef(0);
   const firstScrollUp = useRef(0);
+  const [scrollPos, setScrollPos] = useState(0);
 
   const handleScroll = () => {
     const currentScrollPos = scrollPos;
@@ -18,7 +19,7 @@ const useHideOnScroll = (ref: React.RefObject<HTMLElement>, scrollPos: number) =
     isScrollingDown.current = scrollingDown;
     prevScrollPos.current = currentScrollPos;
 
-    if (ref.current) {
+    if (ref?.current) {
       ref.current.style.transition = 'transform 0.3s';
       if (isScrollingDown.current && currentScrollPos > firstScrollDown.current + 50) {
         ref.current.style.transform = 'translateY(-100%)';
@@ -27,6 +28,15 @@ const useHideOnScroll = (ref: React.RefObject<HTMLElement>, scrollPos: number) =
       }
     }
   };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollPos(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     handleScroll();

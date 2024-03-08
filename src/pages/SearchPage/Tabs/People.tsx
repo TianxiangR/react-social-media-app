@@ -20,9 +20,7 @@ function People() {
   const renderPeople = () => {
     if (isPending) {
       return (
-        <div className="mt-10">
-          <Loader />
-        </div>
+        <Loader />
       );
     }
     else if (isError) {
@@ -56,11 +54,8 @@ function People() {
           }
           {
             isFetchingNextPage && (
-              <div className="mt-10">
-                <Loader />
-              </div>
+              <Loader />
             )
-          
           }
         </ul>
       );

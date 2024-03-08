@@ -2,33 +2,26 @@ import React, { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import ListNode from '@/classes/ListNode';
-import CreatePostForm from '@/components/shared/CreatePostForm';
+import Loader from '@/components/shared/Loader';
 import PostPreview from '@/components/shared/PostPreview';
-import { useUserContext } from '@/context/AuthContext';
-import { useGlobalContext } from '@/context/GlobalContext';
-import { useGetUserPosts } from '@/react-query/queriesAndMutations';
+import { useGetRepliesByPostId } from '@/react-query/queriesAndMutations';
 import { AugmentedPostPreview, PostMeta } from '@/types';
 
-import Loader from '../../../components/shared/Loader';
-
-export interface UserPostsProps {
-  username: string;
+export interface PostRepliesProps {
+  postId: string;
 }
 
-function UserPosts({ username }: UserPostsProps) {
-  const { data, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = useGetUserPosts(username);
-  const { ref, inView } = useInView();
-  const {user} = useUserContext();
+function PostReplies({postId}: PostRepliesProps) {
+  const {data, isError, isPending, isFetchingNextPage, fetchNextPage} = useGetRepliesByPostId(postId);
+  const { inView, ref } = useInView({triggerOnce: true});
 
   useEffect(() => {
-    if (inView) {
+    if (inView && !isFetchingNextPage) {
       fetchNextPage();
     }
-  }, [inView]);
+  }, [inView, isFetchingNextPage]); 
 
   const preprocessPosts = (posts: AugmentedPostPreview[]): Array<PostMeta[]> => {
-    if (!user) return [];
-
     const map: Map<string, ListNode> = new Map();
     const heads: Array<ListNode> = [];
     const groups: Array<Array<AugmentedPostPreview>> = [];
@@ -36,7 +29,7 @@ function UserPosts({ username }: UserPostsProps) {
     for (let i = posts.length - 1; i >= 0; i--) {
       const post = posts[i];
       const newNode = new ListNode(post);
-      if (post.reply_parent && post.reply_parent.author.id === user.id) {
+      if (post.reply_parent) {
         const parent = post.reply_parent;
         if (map.has(parent.id)) {
           const node = map.get(parent.id);
@@ -46,8 +39,14 @@ function UserPosts({ username }: UserPostsProps) {
             }
             node.next = newNode;
           }
-        } else {
+        } else if (parent.id === postId) {
           heads.push(newNode);
+        }
+        else {
+          const parentNode = new ListNode(parent);
+          parentNode.next = newNode;
+          heads.push(parentNode);
+          map.set(parent.id, parentNode);
         }
       } else {
         heads.push(newNode);
@@ -93,34 +92,38 @@ function UserPosts({ username }: UserPostsProps) {
     });
   };
 
-  const renderPosts = () => {
-    if (isLoadingPosts) {
+  const renderReplies = () => {
+    if (isPending) {
       return <Loader />;
     } else if (isError) {
       return <div>Failed to load posts</div>;
     } else if (data) {
       const posts = data.pages.map((page) => page.results).flat();
-      const postGroups = preprocessPosts(posts);
       let i = 0;
+      const postGroups = preprocessPosts(posts);
       const actualLength = postGroups.flat().length;
       return postGroups.map((group) => {
         return (
           <li key={i} className="w-full h-full">
             <ul className="flex flex-col">
               {
-                group.map((post) => {
+                group.map((postMeta, index) => {
                   i++;
+                  if (index === 0) {
+                    delete postMeta.post.reply_parent;
+                  }
+
                   if (i === actualLength - 5) {
                     return (
                       <li key={i} ref={ref}>
-                        <PostPreview post={post.post} variant={post.variant} />
+                        <PostPreview post={postMeta.post} variant={postMeta.variant} />
                       </li>
                     );
                   }
                   else {
                     return (
                       <li key={i}>
-                        <PostPreview post={post.post} variant={post.variant} />
+                        <PostPreview post={postMeta.post} variant={postMeta.variant} />
                       </li>
                     );
                   }
@@ -135,14 +138,10 @@ function UserPosts({ username }: UserPostsProps) {
 
 
   return (
-    <ul className="flex flex-col w-full h-full post-list">
-      {renderPosts()}
-      {
-        isFetchingNextPage &&
-          <Loader />
-      }
+    <ul className='flex flex-col post-list'>
+      {renderReplies()}
     </ul>
   );
 }
 
-export default UserPosts;
+export default PostReplies;

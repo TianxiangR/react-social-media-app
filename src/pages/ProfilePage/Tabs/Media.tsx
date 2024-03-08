@@ -25,9 +25,7 @@ function UserMedia({ username }: UserMediaProps) {
   const renderImages = () => {
     if (isPending) {
       return (
-        <div className="flex jusitfy-center items-center mt-10">
-          <Loader />
-        </div>
+        <Loader />
       );
     }
     else if (isError) {

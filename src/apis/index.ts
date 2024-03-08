@@ -148,7 +148,7 @@ export async function unlikePost(postId: string): Promise<AugmentedPostPreview> 
 }
 
 
-export async function getPostById(postId: string): Promise<IPost> {
+export async function getPostById(postId: string): Promise<AugmentedPostPreview> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
   const response = await fetch(`${baseUrl}/api/posts/${postId}/`, {
     headers: {
@@ -160,7 +160,27 @@ export async function getPostById(postId: string): Promise<IPost> {
     throw new Error('Network response was not ok');
   }
 
-  const data: IPost = await response.json();
+  const data = await response.json();
+  return data;
+}
+
+export async function getRepliesById(postId: string, page: number, timestamp: number): Promise<Page<AugmentedPostPreview>> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const urlSearchParams = new URLSearchParams({
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
+  const response = await fetch(`${baseUrl}/api/posts/${postId}/replies/?${urlSearchParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
   return data;
 }
 
@@ -524,5 +544,88 @@ export async function getTopRatedPosts(timestamp: number, page: number): Promise
 
   const data = await response.json();
 
+  return data;
+}
+
+export async function getFollowingPosts(timestamp: number, page: number): Promise<Page<AugmentedPostPreview>> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const searchParams = new URLSearchParams({
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
+
+  const response = await fetch(`${baseUrl}/api/following-posts/?${searchParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+export async function getUserFollowers(username: string, timestamp: number, page: number): Promise<Page<User>> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const searchParams = new URLSearchParams({
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
+
+  const response = await fetch(`${baseUrl}/api/users/${username}/followers/?${searchParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+export async function getUserFollowing(username: string, timestamp: number, page: number): Promise<Page<User>> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const searchParams = new URLSearchParams({
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
+
+  const response = await fetch(`${baseUrl}/api/users/${username}/following/?${searchParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+
+  return data;
+}
+
+export async function markNotificationAsRead(notificationId: string): Promise<Notification> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const response = await fetch(`${baseUrl}/api/notifications/${notificationId}/`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
   return data;
 }

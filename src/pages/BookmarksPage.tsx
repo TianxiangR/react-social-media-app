@@ -1,6 +1,5 @@
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { useMediaQuery } from '@mui/material';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,11 +8,12 @@ import Loader from '@/components/shared/Loader';
 import PostPreview from '@/components/shared/PostPreview';
 import { useUserContext } from '@/context/AuthContext';
 import useHideOnScroll from '@/hooks/useHideOnScroll';
+import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import { useGetBookmarkedPosts } from '@/react-query/queriesAndMutations';
 
 function BookmarksPage() {
   const { user } = useUserContext();
-  const { data, isPending, isError, fetchNextPage } = useGetBookmarkedPosts();
+  const { data, isPending, isError, fetchNextPage, isFetchingNextPage } = useGetBookmarkedPosts();
   const navigate = useNavigate();
   const { ref: viewRef, inView } = useInView();
 
@@ -23,30 +23,14 @@ function BookmarksPage() {
     }
   }, [inView]);
 
-  const shouldHide = useMediaQuery('(max-width: 768px)');
-  const fakeRef = useRef(null);
+  const shouldHide = useIsPhoneScreen();
   const ref = useRef(null);
-  const [scrollPos, setScrollPos] = useState(0);
-  useHideOnScroll(shouldHide ? ref : fakeRef, scrollPos);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollPos(window.scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+  useHideOnScroll(shouldHide ? ref : undefined);
 
   const renderPosts = () => {
     if (isPending) {
       return (
-        <div className="mt-10 flex justify-center items-center">
-          <Loader />
-        </div>
+        <Loader />
       );
     } else if (isError) {
       return (
@@ -73,6 +57,10 @@ function BookmarksPage() {
               </li>
             );
           })}
+          {
+            isFetchingNextPage && 
+              <Loader />
+          }
         </ul>
       );
     }

@@ -141,6 +141,7 @@ export const runMicroTask = (function(){
 
 export function formatDateString(dateString: string) {
   const now = new Date();
+  
   const date = new Date(dateString);
   if (now.getFullYear() !== date.getFullYear()){
     const options: Intl.DateTimeFormatOptions = {
@@ -193,15 +194,29 @@ export function countNonWhiteSpaceCharacters(text: string) {
 
 export function formatDetailedDateString(dateString: string) {
   const date = new Date(dateString);
-  const options: Intl.DateTimeFormatOptions = {
+  const now = new Date();
+  const isSameYear = now.getFullYear() === date.getFullYear();
+  let options: Intl.DateTimeFormatOptions = {
     hour: 'numeric',
     minute: 'numeric',
     hour12: true,
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
   };
   const formattedDate = date.toLocaleDateString('en-US', options);
   const tokens = formattedDate.split(',');
-  return tokens[2] + ' · ' + tokens[0] + ', ' + tokens[1];
+  const time = tokens[1].trim();
+
+  options = isSameYear ? {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  } : {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  };
+
+  const datePart = date.toLocaleDateString('en-US', options);
+  const dateStr= isSameYear ? datePart : datePart.replace(/\//g, '-');
+
+  return time + ' · ' + dateStr;
 }

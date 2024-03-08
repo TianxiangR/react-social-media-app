@@ -158,13 +158,13 @@ function PostPreview(props: PostPreviewProps) {
             </div>
             {
               repost_parent && 
-                <QuotedPost post={repost_parent} />
+                <QuotedPost post={repost_parent} variant='small'/>
             }
           </div>
   
           {/* Bottom row */}
           <div className='flex mt-3 h-fit'>
-            <PostPreviewStats {...props.post} />
+            <PostPreviewStats {...rendered_post} />
           </div>
         </div>
       </div>

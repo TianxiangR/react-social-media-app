@@ -1,5 +1,4 @@
 import SearchIcon from '@mui/icons-material/Search';
-import { useMediaQuery } from '@mui/material';
 import { useQueryClient } from '@tanstack/react-query';
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate,useSearchParams  } from 'react-router-dom';
@@ -8,6 +7,7 @@ import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
 import useHideOnScroll from '@/hooks/useHideOnScroll';
+import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import { QUERY_KEYS } from '@/react-query/queryKeys';
 
 import Latest from './Tabs/Latest';
@@ -23,23 +23,10 @@ function SearchPage() {
   const {user} = useUserContext();
   const {openDrawer} = useGlobalContext().drawer;
   const naivgate = useNavigate();
-  const shouldHide = useMediaQuery('(max-width: 768px)');
-  const fakeRef = useRef(null);
+  const shouldHide = useIsPhoneScreen();
   const ref = useRef(null);
-  const [scrollPos, setScrollPos] = useState(0);
-  useHideOnScroll(shouldHide ? ref : fakeRef, scrollPos);
+  useHideOnScroll(shouldHide ? ref : undefined);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollPos(window.scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
   useEffect(() => {
     if (searchParams.get('q') === null || searchParams.get('q') === '') {
       naivgate('/explore');

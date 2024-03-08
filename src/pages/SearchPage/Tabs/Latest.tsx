@@ -20,9 +20,7 @@ function Latest() {
   const renderPosts = () => {
     if (isPending) {
       return (
-        <div className="mt-10">
-          <Loader />
-        </div>
+        <Loader />
       );
     }
     else if (isError) {
@@ -56,9 +54,7 @@ function Latest() {
           }
           {
             isFetchingNextPage && (
-              <div className="mt-10">
-                <Loader />
-              </div>
+              <Loader />
             )
           }
         </ul>

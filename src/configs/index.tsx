@@ -12,6 +12,7 @@ import React from 'react';
 
 import BookmarksPage from '@/pages/BookmarksPage';
 import ExplorePage from '@/pages/ExplorePage';
+import FollowPage from '@/pages/FollowPage';
 import Home from '@/pages/HomePage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import PostPage from '@/pages/PostPage';
@@ -83,5 +84,10 @@ export const routeConfig = [
     path: '/search',
     element: <SearchPage />,
     label: 'Search'
+  },
+  {
+    path: '/:username/:tab',
+    element: <FollowPage />,
+    label: 'Follow'
   }
 ];

@@ -3,23 +3,18 @@ import CakeOutlinedIcon from '@mui/icons-material/CakeOutlined';
 import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import { useMediaQuery } from '@mui/material';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import EditProfileDialogContent from '@/components/shared/EditProfileDialogContent';
 import IconButton from '@/components/shared/IconButton';
-import ImageView from '@/components/shared/ImageView';
 import Loader from '@/components/shared/Loader';
-import PostDetailStats from '@/components/shared/PostDetailStats';
-import PostPreview from '@/components/shared/PostPreview';
-import ReplyPostForm from '@/components/shared/ReplyPostForm';
 import { Tab, TabContext, TabList, TabPanel } from '@/components/shared/Tabs';
 import { Button } from '@/components/ui/button';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
 import useHideOnScroll from '@/hooks/useHideOnScroll';
+import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import UserLikes from '@/pages/ProfilePage/Tabs/Likes';
 import UserMedia from '@/pages/ProfilePage/Tabs/Media';
 import UserPosts from '@/pages/ProfilePage/Tabs/Posts';
@@ -36,24 +31,9 @@ function ProfilePage() {
   const { openDialog } = useGlobalContext().dialog;
   const {mutate: follow} = useFollowUser();
   const {mutate: unfollow} = useUnfollowUser();
-
-  const shouldHide = useMediaQuery('(max-width: 768px)');
-  const fakeRef = useRef(null);
+  const shouldHide = useIsPhoneScreen();
   const ref = useRef(null);
-  const [scrollPos, setScrollPos] = useState(0);
-  useHideOnScroll(shouldHide ? ref : fakeRef, scrollPos);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollPos(window.scrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
+  useHideOnScroll(shouldHide ? ref : undefined);
 
   const formateBirthday = (date: string) => {
     const months = date.split('-')[1];
@@ -102,9 +82,7 @@ function ProfilePage() {
   const renderPage = () => {
     if (isPending) {
       return (
-        <div className="flex justify-center items-center w-full h-full">
-          <Loader />
-        </div>
+        <Loader />
       );
     }
     else if (isError) {
@@ -116,7 +94,7 @@ function ProfilePage() {
       };
       return (
         <>
-          <div className="h-[54px] top-0 border-[#eff3f4] border-b-[1px] z-10 sticky-bar flex items-center p-4 w-full" ref={ref}>
+          <div className="h-[54px] top-0 border-[#eff3f4] border-b-[1px] z-10 sticky-bar flex items-center px-4 w-full" ref={ref}>
             <div className="min-w-14">
               <IconButton className="text-xl" onClick={() => navigate(-1)}>
                 <ArrowBackIcon sx={{fontSize: '24px'}}/>
@@ -167,21 +145,28 @@ function ProfilePage() {
               </div>
 
               {/* user info */}
-              <div className="flex flex-col gap mt-4">
+              <div className="flex flex-col gap mt-4 mb-4">
                 <h2 className="text-xl font-bold">{userInfo.name}</h2>
-                <span className="text-[#536471] text-base">@{userInfo.username}</span>
+                <p className="text-[#536471] text-base">
+                  @{userInfo.username}
+                  {userInfo.is_following && 
+                    <div className="bg-[#eff3f4] ml-1 w-fit inline-flex py-[2px] px-1 box-border leading-3 rounded-sm justify-center items-center">
+                      <span className="text-[#536471] text-xs leading-3 font-medium">Follows you</span>
+                    </div>
+                  }
+                </p>
               </div>
 
               {/* bio */}
               {
                 userInfo.bio &&
-                <div className="mt-2">
+                <div className="mb-3">
                   <p className="text-base text-[#0f1419]">{userInfo.bio}</p>
                 </div>
               }
 
               {/* other info */}
-              <div className="w-full mt-2 block">
+              <div className="w-full block mb-3">
                 { userInfo.location &&
                   <span className="inline-block mr-4 break-words">
                     <LocationOnOutlinedIcon sx={{fontSize: '20px', color: '#536471'}}/>
@@ -208,14 +193,14 @@ function ProfilePage() {
               </div>
 
               {/* follower */}
-              <div className="flex w-full mt-4">
-                <Link className="flex mr-4 hover:underline whitespace-pre-wrap" to={''}>
+              <div className="flex w-full">
+                <Link className="flex mr-4 hover:underline whitespace-pre-wrap" to={`/${username}/following`}>
                   <span className="text-sm text-[#0f1419] font-bold">{userInfo.following}</span>
                   <span className="text-sm text-[#536471]"> Following</span>
                 </Link>
-                <Link className="flex hover:underline whitespace-pre-wrap" to={''}>
+                <Link className="flex hover:underline whitespace-pre-wrap" to={`/${username}/followers`}>
                   <span className="text-sm text-[#0f1419] font-bold">{userInfo.followers}</span>
-                  <span className="text-sm text-[#536471] "> Followers</span>
+                  <span className="text-sm text-[#536471] "> Follower{userInfo.followers !== 1 ? 's' : ''}</span>
                 </Link>
               </div>
             </div>
