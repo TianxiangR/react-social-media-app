@@ -228,3 +228,7 @@
 :root {
   overflow-y: scroll;
 }
+
+[role="dialog"] {
+  background: transparent !important;
+}

@@ -157,7 +157,7 @@ function FullScreenImageView({ images, defaultIndex = 0 }: FullScreenImageViewPr
   };
 
   return (
-    <div className="w-screen h-screen max-w-[100vw] max-h-screen overflow-hidden" style={{background: 'rgba(0, 0, 0, 90%)'}}>
+    <div className="w-screen h-screen max-w-[100vw] max-h-screen overflow-hidden" style={{background: 'rgba(0, 0, 0, 80%)'}}>
       { !isTouchScreen &&
         <Button
           className="flex justify-center items-center w-fit rounded-full aspect-square border-white border-2 p-2 hover:bg-[#1d2124] hover:cursor-pointer bg-black text-black absolute top-10 left-10 z-10"
