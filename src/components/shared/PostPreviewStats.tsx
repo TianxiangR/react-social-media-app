@@ -99,7 +99,8 @@ function PostPreviewStats(props: IPostPreview) {
     if (hasShareAPI) {
       navigator
         .share({title: 'Share', url: `${window.location.origin}/${props.author.username}/status/${id}`})
-        .catch(() => {
+        .catch((err) => {
+          console.log(err);
           showSnackbar({
             props: {
               autoHideDuration: 3000, 
