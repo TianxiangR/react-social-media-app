@@ -218,7 +218,7 @@ export async function replyPostById(postId: string, reply: NewPost, onUploadProg
   return response.data;
 }
 
-export async function repostPostById(postId: string, post: NewPost, onUploadProgress?: (e: AxiosProgressEvent) => void): Promise<AugmentedPostPreview> {
+export async function repostPostById(postId: string, post: Partial<NewPost>, onUploadProgress?: (e: AxiosProgressEvent) => void): Promise<AugmentedPostPreview> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
   const formData = getFormDataFromObject(post);
   const response = await axios.post(`${baseUrl}/api/posts/${postId}/reposts/`, formData, {

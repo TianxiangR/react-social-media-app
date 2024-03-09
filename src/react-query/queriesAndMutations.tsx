@@ -575,7 +575,7 @@ export function useRepostPostById(postId: string) {
   const { showSnackbar } = useSnackbarContext();
 
   return useMutation({
-    mutationFn: ({post, onUploadProgress}: {post: NewPost; onUploadProgress?: (e: AxiosProgressEvent) => void}) => repostPostById(postId, post, onUploadProgress),
+    mutationFn: ({post, onUploadProgress}: {post: Partial<NewPost>; onUploadProgress?: (e: AxiosProgressEvent) => void}) => repostPostById(postId, post, onUploadProgress),
     onSuccess: (data) => {
       const content = (
         <Alert severity="success" sx={{ width: '100%' }}>

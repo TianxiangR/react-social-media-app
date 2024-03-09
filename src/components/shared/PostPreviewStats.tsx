@@ -66,7 +66,7 @@ function PostPreviewStats(props: IPostPreview) {
 
   const handleRepostClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    repost({});
+    repost({post: {}});
   };
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
