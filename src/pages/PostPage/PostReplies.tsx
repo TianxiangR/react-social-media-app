@@ -21,6 +21,10 @@ function PostReplies({postId}: PostRepliesProps) {
     }
   }, [inView, isFetchingNextPage]); 
 
+  useEffect(() => {
+    console.log(data?.pages.map((page) => page.results).flat());
+  }, [data]);
+
   const preprocessPosts = (posts: AugmentedPostPreview[]): Array<PostMeta[]> => {
     const map: Map<string, ListNode> = new Map();
     const heads: Array<ListNode> = [];

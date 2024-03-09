@@ -8,7 +8,7 @@ import { useSearchMedia } from '@/react-query/queriesAndMutations';
 
 function Media() {
   const [searchParams] = useSearchParams();
-  const {data, isPending, isFetchingNextPage, isError, fetchNextPage} = useSearchMedia(searchParams.get('q') || '');
+  const {data, isPending, isFetchingNextPage, isError, fetchNextPage, isRefetching} = useSearchMedia(searchParams.get('q') || '');
   const { ref, inView } = useInView();
 
   useEffect(() => {

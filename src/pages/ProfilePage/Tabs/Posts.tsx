@@ -46,7 +46,13 @@ function UserPosts({ username }: UserPostsProps) {
             }
             node.next = newNode;
           }
-        } else {
+        } else if (parent.author.id === user.id) {
+          const parentNode = new ListNode(parent);
+          parentNode.next = newNode;
+          heads.push(parentNode);
+          map.set(parent.id, parentNode);
+        }
+        else {
           heads.push(newNode);
         }
       } else {

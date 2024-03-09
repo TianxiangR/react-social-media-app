@@ -2,7 +2,8 @@
 import CloseIcon from '@mui/icons-material/Close';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import { Alert, Slide, SlideProps, Snackbar, TextField } from '@mui/material';
-import React, { useEffect, useRef, useState } from 'react';
+import { AxiosProgressEvent } from 'axios';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { useUserContext } from '@/context/AuthContext';
@@ -26,6 +27,7 @@ export type PostDialogContentProps = {
   variant: 'reply' | 'repost';
   parent_post: IPostPreview;
 }
+
 function PostDialogContent({variant = 'create', parent_post}: PostDialogContentProps) {
   const { closeDialog } = useGlobalContext().dialog;
   const selectFileRef = useRef<HTMLInputElement>(null);
@@ -33,16 +35,30 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [inputText, setInputText] = useState('');
-  const enablePost = imageUrls.length > 0 || countNonWhiteSpaceCharacters(inputText) > 0 || parent_post;
-  const enableImage = imageUrls.length < 4;
   const {user} = useUserContext();
-  const { mutateAsync: createPost,  reset: resetCreatePost } = useCreatePost();
-  const { mutateAsync: replyPost, reset: resetReplyPost } = useReplyPostById(parent_post?.id || '');
-  const { mutateAsync: repostPost, reset: resetRepostPost } = useRepostPostById(parent_post?.id || '');
+  const { mutateAsync: createPost,  reset: resetCreatePost, isPending: isCreatePostPending } = useCreatePost();
+  const { mutateAsync: replyPost, reset: resetReplyPost, isPending: isReplyPostPending } = useReplyPostById(parent_post?.id || '');
+  const { mutateAsync: repostPost, reset: resetRepostPost, isPending: isRepostPostPending } = useRepostPostById(parent_post?.id || '');
+  const isPending = isCreatePostPending || isReplyPostPending || isRepostPostPending;
+  const enablePost = (imageUrls.length > 0 || countNonWhiteSpaceCharacters(inputText) > 0 || (variant === 'repost' && parent_post)) && !isPending;
+  const enableImage = imageUrls.length < 4;
+  const [progress, setProgress] = useState(0);
+
+  const onUploadProgress = (progressEvent: AxiosProgressEvent) => {
+    if (progressEvent.total) {
+      const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      console.log(percentCompleted);
+      setProgress(percentCompleted);
+    }
+  };
 
   const focusOnInput = () => { 
     inputRef.current?.focus();
   };
+
+  useEffect(() => {
+    focusOnInput();
+  }, []);
 
   const handleSelectFileClick = () => {
     selectFileRef.current?.click(); 
@@ -67,7 +83,8 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
     setImageFiles([]);
   };
 
-  const onMutateSuccess = (data: AugmentedPostPreview) => {
+  const onMutateSuccess = () => {
+    setProgress(0);
     resetCreatePost();
     resetReplyPost();
     resetRepostPost();
@@ -77,24 +94,27 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
 
   const handleSubmit = async () => {
     if (variant === 'reply') {
-      await replyPost({content: inputText, images: imageFiles},  {onSuccess: onMutateSuccess});
+      await replyPost({post: {content: inputText, images: imageFiles}, onUploadProgress},  {onSuccess: onMutateSuccess});
       return;
     }
 
     if (variant === 'repost') {
-      await repostPost({content: inputText, images: imageFiles},  {onSuccess: onMutateSuccess});
+      await repostPost({post: {content: inputText, images: imageFiles}, onUploadProgress},  {onSuccess: onMutateSuccess});
       return;
     }
 
-    await createPost({content: inputText, images: imageFiles},  {onSuccess: onMutateSuccess});
+    await createPost({post: {content: inputText, images: imageFiles}, onUploadProgress},  {onSuccess: onMutateSuccess});
   };
-
-
 
   return (  
     <div className="dialog-content">
+      {/* progress bar */}
+      <div className="w-full h-1 sticky top-0 z-20">
+        <div className="h-full bg-blue" style={{width: `${progress}%`, transition: 'width 0.5s ease'}}/>
+      </div>
+
       {/* Top Bar */}
-      <div className="flex justify-start p-2 pb-0 top-0 sticky-bar">
+      <div className="flex justify-start p-2 pb-0 top-0 sticky-bar z-10">
         <Button
           className="flex justify-center items-center w-fit rounded-full p-2 hover:bg-[#e6e6e7] hover:cursor-pointer bg-transparent text-black"
           onClick={() => {clearInput(); closeDialog();}}
@@ -145,6 +165,7 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
             onChange={handleInputTextChange}
             value={inputText}
             ref={inputRef}
+            rows={1}
           />
           
           { imageUrls.length > 0 &&
@@ -182,7 +203,7 @@ function PostDialogContent({variant = 'create', parent_post}: PostDialogContentP
       </div>
 
       {/* Footer */}
-      <div className="flex justify-between bottom-0 px-4 py-2 sticky-bar border-t-[1px] border-[#eff3f4]">
+      <div className="flex justify-between bottom-0 px-4 py-2 sticky-bar border-t-[1px] border-[#eff3f4] z-20">
         <div className="flex items-center">
           <IconButton 
             className='text-[#1d9bf0] text-xl'

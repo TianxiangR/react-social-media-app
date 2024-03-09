@@ -42,7 +42,7 @@ export interface PostStatsProps {
 
 
 function PostDetailStats(props: IPostPreview) {
-  const {id, liked: initial_liked, like_count: initial_like_count, comment_count, repost_count, view_count, bookmarked, bookmark_count} = props;
+  const {id, liked: initial_liked, like_count: initial_like_count, reply_count: comment_count, repost_count, view_count, bookmarked, bookmark_count} = props;
   const [liked, setLiked] = useState(initial_liked);
   const [like_count, setLikeCount] = useState(initial_like_count);
   const { mutateAsync: repost} = useRepostPostById(id);

@@ -12,7 +12,7 @@ import Loader from '../../../components/shared/Loader';
 
 
 function FollowingPosts() {
-  const { data, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = useGetFollowingPosts();
+  const { data, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage} = useGetFollowingPosts();
   const [ref, inView] = useInView();
   const isPhoneScreen = useIsPhoneScreen();
 

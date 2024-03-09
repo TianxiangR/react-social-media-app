@@ -39,26 +39,26 @@ function SearchPage() {
 
   const handleEnterKeydown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && inputText.length > 0) {
-      const prev = searchParams.get('q');
       setSearchParams({q: inputText});
 
-      if (prev === inputText) {
-        queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.SEARCH_TOP],
-        });
+      // cancel all ongoing queries
+      queryClient.cancelQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.SEARCH_TOP]});
+      queryClient.cancelQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.SEARCH_LATEST]});
+      queryClient.cancelQueries({queryKey: [QUERY_KEYS.SEARCH_MEDIA]});
 
-        queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.SEARCH_LATEST],
-        });
-
-        queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.SEARCH_MEDIA],
-        });
-
-        queryClient.invalidateQueries({
-          queryKey: [QUERY_KEYS.SEARCH_PEOPLE],
-        });
-      }
+      // remove cache for all queries to force refetch
+      queryClient.removeQueries({
+        queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.SEARCH_TOP],
+      });
+      queryClient.removeQueries({
+        queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.SEARCH_LATEST],
+      });
+      queryClient.removeQueries({
+        queryKey: [QUERY_KEYS.SEARCH_MEDIA],
+      });
+      queryClient.removeQueries({
+        queryKey: [QUERY_KEYS.GET_PEOPLE_LIST, QUERY_KEYS.SEARCH_PEOPLE],
+      });
     }
   };
 

@@ -51,12 +51,12 @@ export type IPostPreview = {
   bookmarked: boolean;
   like_count: number;
   repost_count: number;
-  comment_count: number;
+  reply_count: number;
   view_count: number;
   bookmark_count: number;
   reposted: boolean;
-  repost_parent?: IPostPreview;
-  reply_parent?: IPostPreview;
+  repost_parent: IPostPreview | undefined | null;
+  reply_parent: IPostPreview | undefined | null;
 };
 
 export type AugmentedPostPreview = IPostPreview;
@@ -157,6 +157,7 @@ export type Page<T> = {
   results: T[];
   count: number;
   total_pages: number;
+  page_size: number;
 }
 
 export type PostMeta = {

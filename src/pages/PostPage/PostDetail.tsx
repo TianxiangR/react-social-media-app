@@ -71,14 +71,16 @@ function PostDetail(props: IPostPreview) {
           <PostPreview key={index} post={reply_parent} variant={index === 0 ? 'top' : 'middle'} />
         ))
       }
-      <div className="flex flex-col px-4 pt-4 w-full border-b-[1px] border-[#eff3f4]">
+      <div className="flex flex-col px-4 pt-4 w-full">
         {
           isRepost && 
         <div className="flex items-center gap-2">
           <div className="flex w-[40px] justify-end">
             <RepeatIcon sx={{fontSize: '16px', color: '#536471'}}/>
           </div>
-          <span className="text-[#536471] text-sm font-bold">{`${rendered_post.author.id === user?.id ? 'You' : rendered_post.author.name} reposted`}</span>
+          <Link className="text-[#536471] text-sm font-bold hover:underline" to={`/${rendered_post.author.username}`} onClick={(e) => e.stopPropagation()}>
+            {`${rendered_post.author.id === user?.id ? 'You' : rendered_post.author.name} reposted`}
+          </Link>
         </div>
         }
         <div className="flex justify-between">
@@ -188,14 +190,14 @@ function PostDetail(props: IPostPreview) {
         <div className="px-1 py-3 ">
           <PostDetailStats {...rendered_post} />
         </div>
-        {
-          !isPhoneScreen &&
+      </div>
+      {
+        !isPhoneScreen &&
           <>
             <hr className="border-[#eff3f4] border-[1px]" />
             <ReplyPostForm postId={id} author={author} />
           </>
-        }
-      </div>
+      }
     </div>
   );
 }

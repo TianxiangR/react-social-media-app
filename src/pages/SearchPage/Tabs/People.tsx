@@ -8,7 +8,7 @@ import { useSearchPeople } from '@/react-query/queriesAndMutations';
 
 function People() {
   const [searchParams] = useSearchParams();
-  const {data, isPending, isError, fetchNextPage, isFetchingNextPage} = useSearchPeople(searchParams.get('q') || '');
+  const {data, isPending, isError, fetchNextPage, isFetchingNextPage, isRefetching} = useSearchPeople(searchParams.get('q') || '');
   const { ref, inView} = useInView();
 
   useEffect(() => {

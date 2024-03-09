@@ -8,7 +8,7 @@ import { useSearchLatest } from '@/react-query/queriesAndMutations';
 
 function Latest() {
   const [searchParams] = useSearchParams();
-  const {data, isPending, isError, fetchNextPage, isFetchingNextPage} = useSearchLatest(searchParams.get('q') || '');
+  const {data, isPending, isError, fetchNextPage, isFetchingNextPage, isRefetching} = useSearchLatest(searchParams.get('q') || '');
   const { ref, inView} = useInView();
 
   useEffect(() => {

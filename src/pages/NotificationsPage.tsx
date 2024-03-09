@@ -15,7 +15,7 @@ import { useGetNotifications, useMarkNotificationAsRead } from '@/react-query/qu
 
 function NotificationsPage() {
   const [currentTab, setCurrentTab] = useState('all');
-  const {data: notifications, isPending, isError} = useGetNotifications();
+  const {data: notifications, isPending, isError, refetch} = useGetNotifications();
   const {user} = useUserContext();
   const {openDrawer} = useGlobalContext().drawer;
   const shouldHide = useIsPhoneScreen();
@@ -41,7 +41,7 @@ function NotificationsPage() {
             if (notification.type === 'repost' || notification.type === 'reply') {
               return (
                 <li key={notification.id}>
-                  <InViewContainer once onInview={() => markAsRead(notification.id)}>
+                  <InViewContainer once onInview={() => {if (notification.read === false) markAsRead(notification.id);}}>
                     <PostPreview post={notification.data} />
                   </InViewContainer>
                 </li>
@@ -50,7 +50,7 @@ function NotificationsPage() {
             else if (notification.type === 'like') {
               return (
                 <li key={notification.id}>
-                  <InViewContainer once onInview={() => markAsRead(notification.id)}>
+                  <InViewContainer once onInview={() => {if (notification.read === false) markAsRead(notification.id);}}>
                     <LikePreview {...notification.data} />
                   </InViewContainer>
                 </li>
@@ -59,7 +59,7 @@ function NotificationsPage() {
             else if (notification.type === 'follow') {
               return (
                 <li key={notification.id}>
-                  <InViewContainer once onInview={() => markAsRead(notification.id)}>
+                  <InViewContainer once onInview={() => {if (notification.read === false) markAsRead(notification.id);}}>
                     <FollowPreview {...notification.data} />
                   </InViewContainer>
                 </li>

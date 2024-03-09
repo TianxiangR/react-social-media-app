@@ -43,7 +43,7 @@ function PostPage() {
       const isRepost = !!(post.repost_parent && post.content.length === 0);
       const rendered_post = isRepost ? post.repost_parent as AugmentedPostPreview : post;
       return (
-        <div className="flex flex-col w-full">
+        <div className="w-full post-list">
           <PostDetail {...post} />
           <PostReplies postId={rendered_post.id} />
         </div>
@@ -55,7 +55,7 @@ function PostPage() {
 
   return (
     <div className="h-full w-full">
-      <div className="h-14 top-0 border-[#eff3f4] border-b-[1px] z-10 sticky-bar flex items-center p-4" ref={ref}>
+      <div className="h-14 top-0 border-[#eff3f4] border-b-[1px] z-20 sticky-bar flex items-center p-4" ref={ref}>
         <div className="min-w-14">
           <IconButton className="text-xl" onClick={() => navigate(-1)}>
             <ArrowBackIcon sx={{fontSize: '24px'}}/>

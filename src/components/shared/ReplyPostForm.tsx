@@ -1,5 +1,6 @@
 import CloseIcon from '@mui/icons-material/Close';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import { AxiosProgressEvent } from 'axios';
 import React, { useEffect,useRef, useState } from 'react';
 
 import { useUserContext } from '@/context/AuthContext';
@@ -22,11 +23,19 @@ function replyPostForm({postId, author}: ReplyPostProps) {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [inputText, setInputText] = useState('');
-  const enablePost = imageUrls.length > 0 || inputText !== '';
-  const enableImage = imageUrls.length < 4;
   const {user} = useUserContext();
-  const { mutateAsync: replyPost } = useReplyPostById(postId);
+  const { mutateAsync: replyPost, isPending } = useReplyPostById(postId);
   const [hasBeenFocused, setHasBeenFocused] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const enablePost = (imageUrls.length > 0 || inputText !== '') && !isPending;
+  const enableImage = imageUrls.length < 4;
+
+  const onUploadProgress = (progressEvent: AxiosProgressEvent) => {
+    if (progressEvent.total) {
+      const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      setProgress(percentCompleted);
+    }
+  };
 
   const focusOnInput = () => { 
     inputRef.current?.focus();
@@ -53,6 +62,7 @@ function replyPostForm({postId, author}: ReplyPostProps) {
   };
 
   const clearInput = () => {
+    setProgress(0);
     setInputText('');
     setImageUrls([]);
     setImageFiles([]);
@@ -63,13 +73,13 @@ function replyPostForm({postId, author}: ReplyPostProps) {
   };
 
   const handleCreatePost = async () => {
-    replyPost( { content: inputText, images: imageFiles }, {onSuccess: clearInput});
+    replyPost({post: { content: inputText, images: imageFiles }, onUploadProgress}, {onSuccess: clearInput});
   };
 
 
   const renderFullContent = () => {
     return (
-      <div className="flex flex-col py-2">
+      <div className="flex flex-col py-2 px-4 relative w-full">
         <div className="flex justify-between items-center ml-[52px] mb-4">
           <span className="text-base text-[#536471]">Replying to <span className="text-blue">@{author.username}</span></span>
         </div>
@@ -80,7 +90,6 @@ function replyPostForm({postId, author}: ReplyPostProps) {
             <div className="w-full gap-3 pb-2 box-border flex hover:cursor-text jusitfy-center"
               onClick={focusOnInput}
             >
-
               <div className="grow max-w-[510px]">
                 { 
                   <TextArea 
@@ -93,31 +102,31 @@ function replyPostForm({postId, author}: ReplyPostProps) {
                   />
                 }
                 { imageUrls.length > 0 &&
-        <Slides defaultPosition='end' slideCols={2} scrollCols={2}>
-          {
-            imageUrls.map((url, index) => {
-              const baseClassName = 'object-center w-full rounded-2xl';
-              const heightClassname = imageUrls.length === 1 ? 'object-cover max-h-[660px]' : 'object-cover h-[288px] max-h-[288px]';
-              const className = `${baseClassName} ${heightClassname}`;
-              const removeImage = () => {
-                setImageUrls((prev) => prev.filter((_, i) => i !== index));
-                setImageFiles((prev) => prev.filter((_, i) => i !== index));
-              };
+                    <Slides defaultPosition='end' slideCols={2} scrollCols={2}>
+                      {
+                        imageUrls.map((url, index) => {
+                          const baseClassName = 'object-center w-full rounded-2xl';
+                          const heightClassname = imageUrls.length === 1 ? 'object-cover max-h-[660px]' : 'object-cover h-[288px] max-h-[288px]';
+                          const className = `${baseClassName} ${heightClassname}`;
+                          const removeImage = () => {
+                            setImageUrls((prev) => prev.filter((_, i) => i !== index));
+                            setImageFiles((prev) => prev.filter((_, i) => i !== index));
+                          };
 
-              return (
-                <div className="mr-1 relative rounded-2xl overflow-hidden" key={index}>
-                  <img src={url} className={className}/>
-                  <Button
-                    className="flex justify-center items-center w-fit rounded-full p-2 hover:bg-[#1d2124] hover:cursor-pointer bg-[#0b0f13] text-black absolute top-1 right-1 z-10"
-                    onClick={removeImage}
-                  >
-                    <CloseIcon sx={{color: 'white'}}/>
-                  </Button>
-                </div>
-              );
-            })
-          }
-        </Slides>
+                          return (
+                            <div className="mr-1 relative rounded-2xl overflow-hidden" key={index}>
+                              <img src={url} className={className}/>
+                              <Button
+                                className="flex justify-center items-center w-fit rounded-full p-2 hover:bg-[#1d2124] hover:cursor-pointer bg-[#0b0f13] text-black absolute top-1 right-1 z-10"
+                                onClick={removeImage}
+                              >
+                                <CloseIcon sx={{color: 'white'}}/>
+                              </Button>
+                            </div>
+                          );
+                        })
+                      }
+                    </Slides>
                 }
               </div>
             </div>
@@ -149,7 +158,7 @@ function replyPostForm({postId, author}: ReplyPostProps) {
 
   const renderCompactContent = () => {
     return (
-      <div className="flex flex-col py-2">
+      <div className="flex flex-col py-2 px-4 w-full relative">
         <div className="w-full gap-3 box-border flex items-center">
           <img src={user?.profile_image} className="profile-image" />
           <div className="w-full flex-row flex">
@@ -161,7 +170,8 @@ function replyPostForm({postId, author}: ReplyPostProps) {
                 { 
                   <TextArea 
                     className="outline-none text-xl w-full" 
-                    placeholder="Post your reply" 
+                    placeholder="Post your reply"
+                    disabled={isPending}
                     onChange={handleInputTextChange}
                     value={inputText}
                     ref={inputRef}
@@ -185,9 +195,13 @@ function replyPostForm({postId, author}: ReplyPostProps) {
 
 
   return (
-    <>
+    <div className='relative'>
+      {/* progress bar */}
+      <div className="w-full h-1 absolute top-0 z-20">
+        <div className="h-full bg-blue" style={{width: `${progress}%`, transition: 'width 0.5s ease'}}/>
+      </div>
       {hasBeenFocused ? renderFullContent() : renderCompactContent()}
-    </>
+    </div>
   );
 }
 

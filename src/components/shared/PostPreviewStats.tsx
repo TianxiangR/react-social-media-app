@@ -33,7 +33,7 @@ function SlideUp(props: SlideProps) {
 }
 
 function PostPreviewStats(props: IPostPreview) {
-  const {id, liked, like_count, comment_count, repost_count, view_count, bookmarked, reposted} = props;
+  const {id, liked, like_count, reply_count: comment_count, repost_count, view_count, bookmarked, reposted} = props;
   const { openDialog } = useGlobalContext().dialog;
 
   const { mutateAsync: likePost } = useLikePost(id);

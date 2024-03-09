@@ -10,8 +10,8 @@ import { useSearchPeople, useSearchTop } from '@/react-query/queriesAndMutations
 
 function Top({setCurrentTab}: {setCurrentTab: (tab: string) => void}){
   const [searchParams] = useSearchParams();
-  const {data: postData, isPending: isPendingPosts, isError: isErrorPosts, fetchNextPage, isFetchingNextPage} = useSearchTop(searchParams.get('q') || '');
-  const {data: peopleData, isPending: isPendingPeople, isError: isErrorPeople} = useSearchPeople(searchParams.get('q') || '');
+  const {data: postData, isPending: isPendingPosts, isError: isErrorPosts, fetchNextPage, isFetchingNextPage, isRefetching: isRefetchingPosts} = useSearchTop(searchParams.get('q') || '');
+  const {data: peopleData, isPending: isPendingPeople, isError: isErrorPeople, isRefetching: isRefetchingPeople} = useSearchPeople(searchParams.get('q') || '');
   const { ref, inView } = useInView();
 
 
@@ -22,7 +22,7 @@ function Top({setCurrentTab}: {setCurrentTab: (tab: string) => void}){
   }, [inView]);
   
   const renderTop = () => {
-    if ((isPendingPosts || isPendingPeople) && (!postData || !peopleData)) {
+    if (isPendingPosts || isPendingPeople) {
       return (
         <div>
           <Loader />
@@ -43,22 +43,28 @@ function Top({setCurrentTab}: {setCurrentTab: (tab: string) => void}){
       return (
         <div className="post-list">
           <div className="flex flex-col">
-            <h1 className="text-xl font-bold px-4 py-2">People</h1>
-            <ul className="flex flex-col">
-              {
-                people.map((user) => (
-                  <li key={user.id} >
-                    <UserPreview {...user} />
-                  </li>
-                ))
-              }
-              <li 
-                className="p-4 w-full hover:bg-[#f7f7f7] hover:cursor-pointer text-blue"
-                onClick={() => setCurrentTab('people')}
-              >
-                View all
-              </li>
-            </ul>
+            {
+              people.length > 0 && (
+                <>
+                  <h1 className="text-xl font-bold px-4 py-2">People</h1>
+                  <ul className="flex flex-col">
+                    {
+                      people.map((user) => (
+                        <li key={user.id} >
+                          <UserPreview {...user} />
+                        </li>
+                      ))
+                    }
+                    <li 
+                      className="p-4 w-full hover:bg-[#f7f7f7] hover:cursor-pointer text-blue"
+                      onClick={() => setCurrentTab('people')}
+                    >
+                    View all
+                    </li>
+                  </ul>
+                </>
+              )
+            }
           </div>
           {
             posts.length > 0 && (

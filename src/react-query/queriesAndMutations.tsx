@@ -1,6 +1,7 @@
 import { Alert, Slide, type SlideProps } from '@mui/material';
-import { InfiniteData,  QueryKey, useInfiniteQuery,useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { cloneDeep } from 'lodash';
+import { InfiniteData,  QueryClient,  QueryKey, useInfiniteQuery,useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Axios, AxiosProgressEvent } from 'axios';
+import { cloneDeep, update } from 'lodash';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -23,7 +24,339 @@ function getNewPostList(oldData: InfiniteData<Page<AugmentedPostPreview>> | unde
     newData.pages[0].results = [newPost, ...oldData.pages[0].results];
   }
 
+  console.log(newData);
+
   return newData;
+}
+
+function addPostToList(queryClient: QueryClient, data: IPostPreview) {
+  // queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_RECENT_POSTS] });
+  // queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS] });
+  // queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS, data.author.username] });
+  // queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_POST_REPLIES_BY_ID, data.reply_parent?.id]});
+
+  queryClient.setQueriesData({
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_FOLLOWING_POSTS],
+  }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => getNewPostList(oldData, data));
+  queryClient.setQueriesData({
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS],
+  }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => getNewPostList(oldData, data));
+  queryClient.setQueriesData({
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS, data.author.username],
+  }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => getNewPostList(oldData, data));
+  queryClient.setQueriesData({
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_POST_REPLIES_BY_ID, data.reply_parent?.id],
+  }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => getNewPostList(oldData, data));
+
+
+  // queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_RECENT_POSTS]});
+  // queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS]});
+  // queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS, data.author.username]});
+  // queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_POST_REPLIES_BY_ID, data.reply_parent?.id]});
+}
+
+function removePostFromList(queryClient: QueryClient, postId: string) {
+  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST] });
+  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_POST_BY_ID, postId] });
+  
+  queryClient.setQueriesData({
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST],
+  }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
+    if (!oldData) return;
+
+    const newData = cloneDeep(oldData);
+
+    newData.pages.map((page) => {
+      page.results = page.results.filter((post) => {
+        if (post.id === postId) {
+          return false;
+        }
+
+        let current_post: IPostPreview | undefined | null = post.reply_parent;
+        while (current_post) {
+          if (current_post.id === postId) {
+            return false;
+          }
+          current_post = current_post.reply_parent;
+        }
+
+        current_post = post.repost_parent;
+        while (current_post) {
+          if (current_post.id === postId) {
+            return false;
+          }
+          current_post = current_post.repost_parent;
+        }
+
+        return true;
+      });
+      return page;
+    });
+
+    return newData;
+  });
+
+
+  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST]});
+  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_POST_BY_ID, postId]});
+}
+
+/**
+ * Copies the attributes from the source object to the receiver object
+ * @param receiver 
+ * @param source 
+ * @param attributes an array of keys to copy from the source object
+ */
+function copyAttributes<T>(receiver: T, source: Partial<T>, attributes: Array<keyof T>) {
+  for (const attribute of attributes) {
+    if (source[attribute] !== undefined && source[attribute] !== null) {
+      Object.defineProperty(receiver, attribute, {
+        value: source[attribute],
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+    }
+  }
+}
+
+function updatePostList(queryClient: QueryClient, data: IPostPreview, attributes: Array<keyof IPostPreview>) {
+  // cancel ongoing queries
+  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST] });
+
+  // udpate query cache
+  queryClient.setQueriesData(
+    {
+      queryKey: [QUERY_KEYS.QUERY_POST_LIST],
+    },
+    (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
+      if (!oldData) return;
+
+      const newData = cloneDeep(oldData);
+
+      newData.pages.map((page) => {
+        page.results = page.results.map((post) => {
+          if (post.id === data.id) {
+            copyAttributes(post, data, attributes);
+          } 
+          else {
+            let current_post: IPostPreview | undefined | null = post.reply_parent;
+            while (current_post) {
+              if (current_post.id === data.id) {
+                copyAttributes(current_post, data, attributes);
+                break;
+              }
+              current_post = current_post.reply_parent;
+            }
+
+            current_post = post.repost_parent;
+            while (current_post) {
+              if (current_post.id === data.id) {
+                copyAttributes(current_post, data, attributes);
+                break;
+              }
+              current_post = current_post.repost_parent;
+            }
+          }
+
+          return post;
+        });
+
+        return page;
+      });
+
+      return newData;
+    });
+
+  // invalidate queries to trigger refetch
+  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST]});
+}
+
+function updatePostById(queryClient: QueryClient, data: IPostPreview, attributes: Array<keyof IPostPreview>) {
+  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_POST_BY_ID, data.id] });
+
+  queryClient.setQueryData([QUERY_KEYS.GET_POST_BY_ID, data.id],
+    (oldData: IPostPreview | undefined | null) => {
+      if (!oldData) return;
+
+      const newData = cloneDeep(oldData);
+
+      if (newData.id === data.id) {
+        copyAttributes(newData, data, attributes);
+        return newData;
+      }
+
+      let current_post: IPostPreview | undefined | null = newData.reply_parent;
+      while (current_post) {
+        if (current_post.id === data.id) {
+          copyAttributes(current_post, data, attributes);
+          break;
+        }
+        current_post = current_post.reply_parent;
+      }
+
+      current_post = newData.repost_parent;
+      while (current_post) {
+        if (current_post.id === data.id) {
+          copyAttributes(current_post, data, attributes);
+          break;
+        }
+        current_post = current_post.repost_parent;
+      }
+
+      return newData;
+    }
+  );
+
+  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_POST_BY_ID, data.id]});
+}
+
+function updateNotificationList(queryClient: QueryClient, data: IPostPreview, attributes: Array<keyof IPostPreview>) {
+  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_NOTIFICATIONS] });
+
+  queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
+    if (!oldData) return;
+
+    return oldData.map((notification) => {
+      if (notification.type === 'reply' || notification.type === 'repost') {
+        if (notification.data.id === data.id) {
+          copyAttributes(notification.data, data, attributes);
+        }
+        else {
+          let current_post: IPostPreview | undefined | null = notification.data.reply_parent;
+          while (current_post) {
+            if (current_post.id === data.id) {
+              copyAttributes(current_post, data, attributes);
+              break;
+            }
+            current_post = current_post.reply_parent;
+          }
+
+          current_post = notification.data.repost_parent;
+          while (current_post) {
+            if (current_post.id === data.id) {
+              copyAttributes(current_post, data, attributes);
+              break;
+            }
+            current_post = current_post.repost_parent;
+          }
+        }
+      }
+
+      return notification;
+    });
+  });
+
+  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_NOTIFICATIONS]});
+}
+
+function updatePost(queryClient: QueryClient, data: IPostPreview, attributes: Array<keyof IPostPreview>) {
+  updatePostList(queryClient, data, attributes);
+  updatePostById(queryClient, data, attributes);
+  updateNotificationList(queryClient, data, attributes);
+}
+
+function updatePeople(queryClient: QueryClient, data: User, attributes: Array<keyof User>) {
+  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_PEOPLE_LIST] });
+  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_USER_PROFILE, data.username] });
+  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_CURRENT_USER] });
+
+  queryClient.setQueriesData(
+    {
+      queryKey: [QUERY_KEYS.SEARCH_PEOPLE],
+    },
+    (oldData: InfiniteData<Page<User>> | undefined) => {
+      if (!oldData) return;
+
+      const newData = cloneDeep(oldData);
+
+      newData.pages.forEach((page) => {
+        page.results = page.results.map((user) => {
+          if (user.id === data.id) {
+            copyAttributes(user, data, attributes);
+          }
+
+          return user;
+        });
+      });
+
+      return newData;
+    });
+
+  queryClient.setQueriesData(
+    {
+      queryKey: [QUERY_KEYS.GET_USER_PROFILE, data.username],
+    },
+    (oldData: User | undefined) => {
+      if (!oldData) return;
+
+      const newData = cloneDeep(oldData);
+      copyAttributes(newData, data, attributes);
+      return newData;
+    });
+
+  queryClient.setQueriesData(
+    {
+      queryKey: [QUERY_KEYS.GET_CURRENT_USER],
+    },
+    (oldData: User | undefined) => {
+      if (!oldData) return;
+
+      const newData = cloneDeep(oldData);
+      copyAttributes(newData, data, attributes);
+      return newData;
+    });
+
+
+  const updatePostIds = new Set();
+  queryClient.setQueriesData(
+    {
+      queryKey: [QUERY_KEYS.QUERY_POST_LIST],
+    },
+    (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
+      if (!oldData) return;
+
+      const newData = cloneDeep(oldData);
+
+      newData.pages.forEach((page) => {
+        page.results = page.results.map((post) => {
+          if (post.author.id === data.id) {
+            copyAttributes(post.author, data, attributes);
+            updatePostIds.add(post.id);
+          }
+          else {
+            let current_post: IPostPreview | undefined | null = post.reply_parent;
+            while (current_post) {
+              if (current_post.author.id === data.id) {
+                copyAttributes(current_post.author, data, attributes);
+                updatePostIds.add(current_post.id);
+              }
+              current_post = current_post.reply_parent;
+            }
+
+            current_post = post.repost_parent;
+            while (current_post) {
+              if (current_post.author.id === data.id) {
+                copyAttributes(current_post.author, data, attributes);
+                updatePostIds.add(current_post.id);
+              }
+              current_post = current_post.repost_parent;
+            }
+          }
+
+          return post;
+        });
+      });
+
+      return newData;
+    });
+
+  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_PEOPLE_LIST]});
+  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_USER_PROFILE, data.username]});
+  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_CURRENT_USER]});
+  updatePostIds.forEach((id) => {
+    queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_POST_BY_ID, id]});
+  });
 }
 
 export function useCreateUser() {
@@ -94,7 +427,7 @@ export function useLogoutUser() {
       });
     },
     onSuccess: () => {
-      queryClient.resetQueries();
+      queryClient.clear();
     },
   });
 }
@@ -104,7 +437,7 @@ export function useCreatePost () {
   const { showSnackbar } = useSnackbarContext();
 
   return useMutation({
-    mutationFn: createPost,
+    mutationFn: ({post, onUploadProgress}: {post: NewPost; onUploadProgress?: (e: AxiosProgressEvent) => void}) => createPost(post, onUploadProgress),
     onSuccess: (data) => {
       const content = (
         <Alert severity="success" sx={{ width: '100%' }}>
@@ -119,17 +452,7 @@ export function useCreatePost () {
       }, 
       content});
 
-      queryClient.setQueriesData({
-        queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_RECENT_POSTS],
-      }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => getNewPostList(oldData, data));
-
-      queryClient.setQueriesData({
-        queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS],
-      }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => getNewPostList(oldData, data));
-
-      queryClient.setQueriesData({
-        queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS, data.author.username],
-      }, (oldData: InfiniteData<Page<AugmentedPostPreview>>| undefined) => getNewPostList(oldData, data));
+      addPostToList(queryClient, data);
     },
     onError: () => {
       const content = (
@@ -152,86 +475,8 @@ export function useLikePost (postId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => likePost(postId),
-    onSuccess: () => {
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-        },
-        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          newData.pages.map((page) => {
-            page.results = page.results.map((post) => {
-              if (post.id === postId) {
-                return {
-                  ...post,
-                  liked: true,
-                  like_count: post.like_count + 1,
-                };
-              }
-
-              return post;
-            });
-
-            return page;
-          });
-
-          return newData;
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.GET_POST_BY_ID]
-        },
-        (oldData: IPostPreview | undefined) => {
-          if (!oldData) return;
-    
-          const newData = cloneDeep(oldData);
-    
-          let current_post: IPostPreview | undefined = newData;
-          while (current_post) {
-            if (current_post.id === postId) {
-              current_post.liked = true;
-              current_post.like_count++;
-              break;
-            }
-            current_post = current_post.reply_parent;
-          }
-    
-          current_post = newData;
-          while (current_post) {
-            if (current_post.id === postId) {
-              current_post.liked = true;
-              current_post.like_count++;
-              break;
-            }
-            current_post = current_post.repost_parent;
-          }
-          
-          return newData;
-        }
-      );
-
-      queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
-        if (!oldData) return;
-
-        return oldData.map((notification) => {
-          if ((notification.type === 'repost' || notification.type === 'reply') && notification.data.id === postId) {
-            return {
-              ...notification,
-              data: {
-                ...notification.data,
-                liked: true,
-                like_count: notification.data.like_count + 1,
-              }
-            };
-          }
-
-          return notification;
-        });
-      });
+    onSuccess: (data: IPostPreview) => {
+      updatePost(queryClient, data, ['liked', 'like_count', 'view_count']);
     },
   });
 }
@@ -240,87 +485,8 @@ export function useUnlikePost (postId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => unlikePost(postId),
-    onSuccess: () => {
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-        },
-        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          newData.pages.map((page) => {
-            page.results = page.results.map((post) => {
-              if (post.id === postId) {
-                return {
-                  ...post,
-                  liked: false,
-                  like_count: post.like_count - 1,
-                };
-              }
-
-              return post;
-            });
-
-            return page;
-          });
-
-          return newData;
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.GET_POST_BY_ID]
-        },
-        (oldData: IPostPreview | undefined) => {
-          if (!oldData) return;
-      
-          const newData = cloneDeep(oldData);
-      
-          let current_post: IPostPreview | undefined = newData;
-      
-          while (current_post) {
-            if (current_post.id === postId) {
-              current_post.liked = false;
-              current_post.like_count--;
-              break;
-            }
-            current_post = current_post.reply_parent;
-          }
-      
-          current_post = newData;
-          while (current_post) {
-            if (current_post.id === postId) {
-              current_post.liked = false;
-              current_post.like_count--;
-              break;
-            }
-            current_post = current_post.repost_parent;
-          }
-      
-          return newData;
-        }
-      );
-
-      queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
-        if (!oldData) return;
-
-        return oldData.map((notification) => {
-          if ((notification.type === 'repost' || notification.type === 'reply') && notification.data.id === postId) {
-            return {
-              ...notification,
-              data: {
-                ...notification.data,
-                liked: false,
-                like_count: notification.data.like_count - 1,
-              }
-            };
-          }
-
-          return notification;
-        });
-      });
+    onSuccess: (data) => {
+      updatePost(queryClient, data, ['liked', 'like_count', 'view_count']);
     },
   });
 }
@@ -353,26 +519,7 @@ export function useDeletePostById (postId: string) {
         TransitionComponent: SlideTransition
       }, content});
 
-      queryClient.setQueriesData({
-        queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-      }, (oldData:InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-        if (!oldData) return;
-
-        const newData = cloneDeep(oldData);
-
-        newData.pages.map((page) => {
-          page.results = page.results.filter((post) => post.id !== postId);
-          return page;
-        });
-
-        return newData;
-      });
-
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-        }
-      );
+      removePostFromList(queryClient, postId);
     },
   });
 }
@@ -381,7 +528,7 @@ export function useGetRepliesByPostId(postId: string) {
   const timestamp = Math.floor(Date.now() / 1000);
 
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_POST_REPLIES, postId],
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_POST_REPLIES_BY_ID, postId],
     queryFn: ({pageParam}) => getRepliesById(postId, pageParam, timestamp),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -400,7 +547,7 @@ export function useReplyPostById(postId: string) {
   const { showSnackbar } = useSnackbarContext();
 
   return useMutation({
-    mutationFn: (post: NewPost) => replyPostById(postId, post),
+    mutationFn: ({post, onUploadProgress}: {post: NewPost; onUploadProgress?: (e: AxiosProgressEvent) => void}) => replyPostById(postId, post, onUploadProgress),
     onSuccess: (data) => {
       const content = (
         <Alert severity="success" sx={{ width: '100%' }}>
@@ -414,68 +561,11 @@ export function useReplyPostById(postId: string) {
         TransitionComponent: SlideTransition
       }, content});
 
-      queryClient.setQueriesData({
-        queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-      },
-      (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-        if (!oldData) return;
-        
-        const newData = cloneDeep(oldData);
-        if (oldData.pages[0]) {
-          newData.pages[0].results = [data, ...oldData.pages[0].results];
-        }
-
-        return newData;
-      });
+      addPostToList(queryClient, data);
       
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-        },
-        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          newData.pages.map((page) => {
-            page.results = page.results.map((post) => {
-              if (post.id === postId) {
-                return {
-                  ...post,
-                  comment_count: post.comment_count + 1,
-                };
-              }
-
-              return post;
-            });
-
-            return page;
-          });
-
-          return newData;
-        });
-
-      queryClient.setQueryData([QUERY_KEYS.GET_POST_BY_ID, postId], (oldData: IPost | undefined): IPost | undefined => {
-        if (!oldData) return;
-
-        return {
-          ...oldData,
-          comment_count: oldData.comment_count + 1,
-          replies: [data, ...oldData.replies],
-        };
-      });
-
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
-        }
-      );
-
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.GET_USER_POSTS, postId],
-        }
-      );
+      if (data.reply_parent) {
+        updatePost(queryClient, data.reply_parent, ['reply_count', 'view_count']);
+      }
     },
   });
 }
@@ -485,7 +575,7 @@ export function useRepostPostById(postId: string) {
   const { showSnackbar } = useSnackbarContext();
 
   return useMutation({
-    mutationFn: (post: Partial<NewPost>) => repostPostById(postId, post),
+    mutationFn: ({post, onUploadProgress}: {post: NewPost; onUploadProgress?: (e: AxiosProgressEvent) => void}) => repostPostById(postId, post, onUploadProgress),
     onSuccess: (data) => {
       const content = (
         <Alert severity="success" sx={{ width: '100%' }}>
@@ -499,67 +589,11 @@ export function useRepostPostById(postId: string) {
         TransitionComponent: SlideTransition
       }, content});
 
-      queryClient.setQueriesData({
-        queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-      },
-      (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-        if (!oldData) return;
-        
-        const newData = cloneDeep(oldData);
-        if (oldData.pages[0]) {
-          newData.pages[0].results = [data, ...oldData.pages[0].results];
-        }
+      addPostToList(queryClient, data);
 
-        return newData;
-      });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-        },
-        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          newData.pages.map((page) => {
-            page.results = page.results.map((post) => {
-              if (post.id === postId) {
-                return {
-                  ...post,
-                  repost_count: post.repost_count + 1,
-                };
-              }
-
-              return post;
-            });
-
-            return page;
-          });
-
-          return newData;
-        });
-
-      queryClient.setQueryData([QUERY_KEYS.GET_POST_BY_ID, postId], (oldData: IPost | undefined): IPost | undefined => {
-        if (!oldData) return;
-
-        return {
-          ...oldData,
-          repost_count: oldData.repost_count + 1,
-        };
-      });
-
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
-        }
-      );
-
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.GET_USER_POSTS],
-        }
-      );
+      if (data.repost_parent) {
+        updatePost(queryClient, data.repost_parent, ['repost_count', 'reposted', 'view_count']);
+      }
     },
   });
 }
@@ -649,217 +683,62 @@ export function useUpdateProfile(username: string) {
 
 export function useFollowUser() {
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbarContext();
   return useMutation({
     mutationFn: followUser,
     onSuccess: (data) => {
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_PEOPLE],
-        },
-        (oldData: InfiniteData<Page<User>> | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          newData.pages.forEach((page) => {
-            page.results = page.results.map((user) => {
-              if (user.id === data.id) {
-                return data;
-              }
-
-              return user;
-            });
-          });
-
-          return newData;
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-        },
-        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          newData.pages.forEach((page) => {
-            page.results.forEach((post) => {
-              if (post.author.id === data.id) {
-                post.author = data;
-              }
-            });
-          });
-
-          return newData;
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.GET_POST_BY_ID]
-        },
-        (oldData: IPostPreview | undefined) => {
-          if (!oldData) return;
-  
-          const newData = cloneDeep(oldData);
-  
-          let current_post: IPostPreview | undefined = newData;
-  
-          while (current_post) {
-            if (current_post.author.id === data.id) {
-              current_post.author = data;
-            }
-            current_post = current_post.reply_parent;
-          }
-  
-          current_post = newData;
-          while (current_post) {
-            if (current_post.author.id === data.id) {
-              current_post.author = data;
-            }
-            current_post = current_post.repost_parent;
-          }
-  
-          return newData;
-        }
+      const content = (
+        <Alert severity="success" sx={{ width: '100%' }}>
+          You followed @{data.username}
+        </Alert>
       );
 
-      queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
-        if (!oldData) return;
+      showSnackbar({props: {
+        autoHideDuration: 3000,
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
 
-        return oldData.map((notification) => {
-          if (notification.type === 'repost' || notification.type === 'reply') {
-            return {
-              ...notification,
-              data: {
-                ...notification.data,
-                author: data,
-              }
-            };
-          }
+      updatePeople(queryClient, data, ['is_following']);
 
-          return notification;
-        });
-      });
+      const current_user: User | undefined = queryClient.getQueryData([QUERY_KEYS.GET_CURRENT_USER]);
 
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.GET_USER_PROFILE],
-        }
-      );
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.GET_CURRENT_USER],
-        }
-      );
+      if (current_user) {
+        const updated_user = cloneDeep(current_user);
+        updated_user.following++;
+        updatePeople(queryClient, updated_user, ['following']);
+      }
     },
   });
 }
 
 export function useUnfollowUser() {
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbarContext();
   return useMutation({
     mutationFn: unfollowUser,
     onSuccess: (data) => {
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.SEARCH_PEOPLE],
-        },
-        (oldData: InfiniteData<Page<User>> | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          newData.pages.forEach((page) => {
-            page.results = page.results.map((user) => {
-              if (user.id === data.id) {
-                return data;
-              }
-
-              return user;
-            });
-          });
-
-          return newData;
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-        },
-        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          newData.pages.forEach((page) => {
-            page.results.forEach((post) => {
-              if (post.author.id === data.id) {
-                post.author = data;
-              }
-            });
-          });
-          return newData;
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.GET_POST_BY_ID]
-        },
-        (oldData: IPostPreview | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          let current_post: IPostPreview | undefined = newData;
-
-          while (current_post) {
-            if (current_post.author.id === data.id) {
-              current_post.author = data;
-            }
-            current_post = current_post.reply_parent;
-          }
-
-          current_post = newData;
-          while (current_post) {
-            if (current_post.author.id === data.id) {
-              current_post.author = data;
-            }
-            current_post = current_post.repost_parent;
-          }
-
-          return newData;
-        }
+      const content = (
+        <Alert severity="info" sx={{ width: '100%' }}>
+          You unfollowed @{data.username}
+        </Alert>
       );
 
-      queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
-        if (!oldData) return;
+      showSnackbar({props: {
+        autoHideDuration: 3000,
+        anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
+        TransitionComponent: SlideTransition
+      }, content});
 
-        return oldData.map((notification) => {
-          if (notification.type === 'repost' || notification.type === 'reply') {
-            return {
-              ...notification,
-              data: {
-                ...notification.data,
-                author: data,
-              }
-            };
-          }
+      updatePeople(queryClient, data, ['is_following']);
 
-          return notification;
-        });
-      });
+      const current_user: User | undefined = queryClient.getQueryData([QUERY_KEYS.GET_CURRENT_USER]);
 
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.GET_USER_PROFILE],
-        }
-      );
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.GET_CURRENT_USER],
-        }
-      );
+      if (current_user) {
+        const updated_user = cloneDeep(current_user);
+        updated_user.following--;
+        updatePeople(queryClient, updated_user, ['following']);
+      }
     },
   });
 }
@@ -877,6 +756,8 @@ export function useSearchTop(query: string) {
       return undefined;
     },
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 }
 
@@ -893,13 +774,15 @@ export function useSearchLatest(query: string) {
       return undefined;
     },
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 }
 
 export function useSearchPeople(query: string) {
   const timestamp = Math.floor(Date.now() / 1000);
   return useInfiniteQuery<Page<User>, Error, InfiniteData<Page<User>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.SEARCH_PEOPLE, query],
+    queryKey: [QUERY_KEYS.GET_PEOPLE_LIST, QUERY_KEYS.SEARCH_PEOPLE, query],
     queryFn: ({pageParam}) => searchPeople(query, timestamp, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -909,6 +792,8 @@ export function useSearchPeople(query: string) {
       return undefined;
     },
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 }
 
@@ -925,6 +810,8 @@ export function useSearchMedia(query: string) {
       return undefined;
     },
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 }
 
@@ -934,7 +821,7 @@ export function useAddBookmark(postId: string) {
 
   return useMutation({
     mutationFn: () => addBookmarkByPostId(postId),
-    onSuccess: () => {
+    onSuccess: (data) => {
       const content = (
         <Alert severity="success" sx={{ width: '100%' }}>
           Added to your Bookmarks.
@@ -947,85 +834,7 @@ export function useAddBookmark(postId: string) {
         TransitionComponent: SlideTransition
       }, content});
 
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-        }
-        , (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-          if (!oldData) return;
-
-          const newData = cloneDeep(oldData);
-
-          newData.pages.forEach((page) => {
-            page.results.forEach((post) => {
-              if (post.id === postId) {
-                post.bookmarked = true;
-                post.bookmark_count += 1;
-              }
-            });
-          });
-
-          return newData;
-        });
-      
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.GET_POST_BY_ID]
-        },
-        (oldData: IPostPreview | undefined) => {
-          if (!oldData) return;
-        
-          const newData = cloneDeep(oldData);
-        
-          let current_post: IPostPreview | undefined = newData;
-        
-          while (current_post) {
-            if (current_post.id === postId) {
-              current_post.bookmarked = true;
-              current_post.bookmark_count++;
-              break;
-            }
-            current_post = current_post.reply_parent;
-          }
-        
-          current_post = newData;
-          while (current_post) {
-            if (current_post.id === postId) {
-              current_post.bookmarked = true;
-              current_post.bookmark_count++;
-              break;
-            }
-            current_post = current_post.repost_parent;
-          }
-        
-          return newData;
-        }
-      );
-
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_BOOKMARKS],
-        }
-      );
-
-      queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
-        if (!oldData) return;
-
-        return oldData.map((notification) => {
-          if (notification.type === 'repost' || notification.type === 'reply') {
-            return {
-              ...notification,
-              data: {
-                ...notification.data,
-                bookmarked: true,
-                bookmark_count: notification.data.bookmark_count + 1,
-              }
-            };
-          }
-
-          return notification;
-        });
-      });
+      updatePost(queryClient, data, ['bookmarked', 'bookmark_count', 'view_count']);
     }
   });
 }
@@ -1036,7 +845,7 @@ export function useRemoveBookmark(postId: string) {
 
   return useMutation({
     mutationFn: () => removeBookmarkByPostId(postId),
-    onSuccess: () => {
+    onSuccess: (data) => {
       const content = (
         <Alert severity="success" sx={{ width: '100%' }}>
           Removed from your Bookmarks.
@@ -1048,103 +857,16 @@ export function useRemoveBookmark(postId: string) {
         anchorOrigin: { vertical: 'bottom', horizontal: 'center' },
         TransitionComponent: SlideTransition
       }, content});
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST],
-        }
-        , (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
-          if (!oldData) return;
-  
-          const newData = cloneDeep(oldData);
-  
-          newData.pages.forEach((page) => {
-            page.results.forEach((post) => {
-              if (post.id === postId) {
-                post.bookmarked = false;
-                post.bookmark_count -= 1;
-              }
-            });
-          });
-  
-          return newData;
-        });
-
-      queryClient.setQueriesData(
-        {
-          queryKey: [QUERY_KEYS.GET_POST_BY_ID]
-        },
-        (oldData: IPostPreview | undefined) => {
-          if (!oldData) return;
-          
-          const newData = cloneDeep(oldData);
-          
-          let current_post: IPostPreview | undefined = newData;
-          
-          while (current_post) {
-            if (current_post.id === postId) {
-              current_post.bookmarked = false;
-              current_post.bookmark_count--;
-              break;
-            }
-            current_post = current_post.reply_parent;
-          }
-          
-          current_post = newData;
-          while (current_post) {
-            if (current_post.id === postId) {
-              current_post.bookmarked = false;
-              current_post.bookmark_count--;
-              break;
-            }
-            current_post = current_post.repost_parent;
-          }
-          
-          return newData;
-        }
-      );
-  
-
-      queryClient.setQueryData([QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_BOOKMARKS],
-        (oldData: AugmentedPostPreview[] | undefined) => {
-          if (!oldData) return;
-
-          return oldData.filter((post) => post.id !== postId);
-        });
-
-      queryClient.invalidateQueries(
-        {
-          queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_BOOKMARKS],
-        }
-      );
-
-      queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
-        if (!oldData) return;
-
-        return oldData.map((notification) => {
-          if (notification.type === 'repost' || notification.type === 'reply') {
-            return {
-              ...notification,
-              data: {
-                ...notification.data,
-                bookmarked: false,
-                bookmark_count: notification.data.bookmark_count - 1,
-              }
-            };
-          }
-
-          return notification;
-        });
-      });
+      
+      updatePost(queryClient, data, ['bookmarked', 'bookmark_count', 'view_count']);
     }
   });
 }
 
-
 export function useGetBookmarkedPosts() {
   const timestamp = Math.floor(Date.now() / 1000);
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.GET_BOOKMARKS],
+    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_BOOKMARKS],
     queryFn: ({pageParam}) => getBookmarkedPosts(timestamp, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -1200,7 +922,7 @@ export function useGetFollowingPosts() {
 export function useGetUserFollowers(username: string) {
   const timestamp = Math.floor(Date.now() / 1000);
   return useInfiniteQuery<Page<User>, Error, InfiniteData<Page<User>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.GET_USER_FOLLOWERS, username],
+    queryKey: [QUERY_KEYS.GET_PEOPLE_LIST, QUERY_KEYS.GET_USER_FOLLOWERS, username],
     queryFn: ({pageParam}) => getUserFollowers(username, timestamp, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -1216,7 +938,7 @@ export function useGetUserFollowers(username: string) {
 export function useGetUserFollowing(username: string) {
   const timestamp = Math.floor(Date.now() / 1000);
   return useInfiniteQuery<Page<User>, Error, InfiniteData<Page<User>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.GET_USER_FOLLOWING, username],
+    queryKey: [QUERY_KEYS.GET_PEOPLE_LIST, QUERY_KEYS.GET_USER_FOLLOWING, username],
     queryFn: ({pageParam}) => getUserFollowing(username, timestamp, pageParam),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -1234,6 +956,7 @@ export function useMarkNotificationAsRead() {
   return useMutation({
     mutationFn: markNotificationAsRead,
     onSuccess: (data) => {
+      queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_NOTIFICATIONS] });
       queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
         if (!oldData) return;
 
@@ -1248,6 +971,7 @@ export function useMarkNotificationAsRead() {
           return notification;
         });
       });
+      queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_NOTIFICATIONS]});
     }
   });
 }

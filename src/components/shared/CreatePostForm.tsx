@@ -1,6 +1,7 @@
 import CloseIcon from '@mui/icons-material/Close';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import { Alert, Slide, type SlideProps } from '@mui/material';
+import { AxiosProgressEvent } from 'axios';
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -25,19 +26,29 @@ function CreatePostForm() {
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [inputText, setInputText] = useState('');
-  const enablePost = imageUrls.length > 0 || inputText !== '';
-  const enableImage = imageUrls.length < 4;
   const {user} = useUserContext();
-  const { mutateAsync: createPost } = useCreatePost();
+  const { mutateAsync: createPost, reset, isPending } = useCreatePost();
+  const enablePost = (imageUrls.length > 0 || inputText !== '') && !isPending;
+  const enableImage = imageUrls.length < 4;
+  const [progress, setProgress] = useState(0);
+
+  const onUploadProgress = (progressEvent: AxiosProgressEvent) => {
+    if (progressEvent.total) {
+      const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+      setProgress(percentCompleted);
+    }
+  };
 
   const clearInput = () => {
+    setProgress(0);
     setInputText('');
     setImageUrls([]);
     setImageFiles([]);
   };
 
-  const mutateSuccess = (data: AugmentedPostPreview) => {
+  const mutateSuccess = () => {
     clearInput();
+    reset();
   };
 
   const focusOnInput = () => { 
@@ -57,18 +68,20 @@ function CreatePostForm() {
     }
   };
 
-
-
   const handleInputTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputText(e.target.value);
   };
 
   const handleCreatePost = async () => {
-    createPost( { content: inputText, images: imageFiles }, {onSuccess: mutateSuccess});
+    createPost({post: { content: inputText, images: imageFiles }, onUploadProgress}, {onSuccess: mutateSuccess});
   };
 
   return (
-    <>
+    <div className="relative">
+      {/* progress bar */}
+      <div className="w-full h-1 sticky top-0 z-10">
+        <div className="h-full bg-blue" style={{width: `${progress}%`, transition: 'width 0.5s ease'}}/>
+      </div>
       <div className="w-full gap-3 p-4 box-border flex hover:cursor-text"
         onClick={focusOnInput}
       >
@@ -140,7 +153,7 @@ function CreatePostForm() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

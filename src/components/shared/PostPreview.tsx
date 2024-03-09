@@ -69,7 +69,9 @@ function PostPreview(props: PostPreviewProps) {
           <div className="flex w-[40px] justify-end">
             <RepeatIcon sx={{fontSize: '16px', color: '#536471'}}/>
           </div>
-          <span className="text-[#536471] text-sm font-bold">{`${post.author.id === user?.id ? 'You' : post.author.name} reposted`}</span>
+          <Link className="text-[#536471] text-sm font-bold hover:underline" to={`/${post.repost_parent?.author.username}`} onClick={(e) => e.stopPropagation()}>
+            {`${post.author.id === user?.id ? 'You' : post.author.name} reposted`}
+          </Link>
         </div>
       }
       <div className="flex w-full h-auto">

@@ -1,9 +1,14 @@
+import axios, { Axios, AxiosProgressEvent } from 'axios';
+
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { getFormDataFromObject, getQueryStringFromObject } from '@/lib/utils';
-import { AugmentedPostPreview, IPost, IPostPreview, NewPost, NewUser, Notification, Page, SearchLatestResult, SearchMediaResult, SearchPeopleResult, SearchTopResult, TokenResponse, User, UserProfile } from '@/types';
-
+import { AugmentedPostPreview, NewPost, NewUser, Notification, Page, TokenResponse, User, UserProfile } from '@/types';
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
+
+function isOkStatus(status: number): boolean {
+  return status >= 200 && status < 300;
+}
 
 export async function createUser(user: NewUser): Promise<TokenResponse> {
 
@@ -71,24 +76,22 @@ export async function publicQueryUser(query: Record<string, string | number | bo
 
 }
 
-export async function createPost(post: NewPost): Promise<AugmentedPostPreview> {
+export async function createPost(post: NewPost, onUploadProgress?: (e: AxiosProgressEvent) => void): Promise<AugmentedPostPreview> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
   const formData = getFormDataFromObject(post);
 
-  const response = await fetch(`${baseUrl}/api/posts/`, {
-    method: 'POST',
+  const response = await axios.post(`${baseUrl}/api/posts/`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    body: formData,
+    onUploadProgress,
   });
 
-  if (!response.ok) {
+  if (!isOkStatus(response.status)) {
     throw new Error('Network response was not ok');
   }
 
-  const data = await response.json();
-  return data;
+  return response.data;
 }
 
 export async function getPosts(page: number, timestamp: number): Promise<Page<AugmentedPostPreview>> {
@@ -198,42 +201,38 @@ export async function deletePostById(postId: string): Promise<void> {
   }
 }
 
-export async function replyPostById(postId: string, reply: NewPost): Promise<AugmentedPostPreview> {
+export async function replyPostById(postId: string, reply: NewPost, onUploadProgress?: (e: AxiosProgressEvent) => void): Promise<AugmentedPostPreview> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
   const formData = getFormDataFromObject(reply);
-  const response = await fetch(`${baseUrl}/api/posts/${postId}/replies/`, {
-    method: 'POST',
+  const response = await axios.post(`${baseUrl}/api/posts/${postId}/replies/`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    body: formData,
+    onUploadProgress,
   });
 
-  if (!response.ok) {
+  if (!isOkStatus(response.status)) {
     throw new Error('Network response was not ok');
   }
 
-  const data = await response.json();
-  return data;
+  return response.data;
 }
 
-export async function repostPostById(postId: string, post: Partial<NewPost>): Promise<AugmentedPostPreview> {
+export async function repostPostById(postId: string, post: NewPost, onUploadProgress?: (e: AxiosProgressEvent) => void): Promise<AugmentedPostPreview> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
   const formData = getFormDataFromObject(post);
-  const response = await fetch(`${baseUrl}/api/posts/${postId}/reposts/`, {
-    method: 'POST',
+  const response = await axios.post(`${baseUrl}/api/posts/${postId}/reposts/`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    body: formData,
+    onUploadProgress,
   });
 
-  if (!response.ok) {
+  if (!isOkStatus(response.status)) {
     throw new Error('Network response was not ok');
   }
 
-  const data = await response.json();
-  return data;
+  return response.data;
 }
 
 export async function queryUserByUsername(username: string): Promise<User> {
@@ -315,20 +314,21 @@ export async function queryMediaByUsername(username: string, timestamp: number, 
   return data;
 }
 
-export async function updateProfile(username: string, user: Partial<UserProfile>): Promise<void> {
+export async function updateProfile(username: string, user: Partial<UserProfile>, onUploadProgress?: (e: AxiosProgressEvent) => void): Promise<User> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
   const formData = getFormDataFromObject(user);
-  const response = await fetch(`${baseUrl}/api/users/${username}/`, {
-    method: 'PATCH',
+  const response = await axios.patch(`${baseUrl}/api/users/${username}/`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    body: formData,
+    onUploadProgress,
   });
 
-  if (!response.ok) {
+  if (!isOkStatus(response.status)) {
     throw new Error('Network response was not ok');
   }
+
+  return response.data;
 }
 
 export async function followUser(username: string): Promise<User> {
