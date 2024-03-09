@@ -102,7 +102,7 @@ function PostDetail(props: IPostPreview) {
           <div className={`flex flex-row ${isPhoneScreen ? 'items-center' : 'items-start'} gap-2`}>
             <div>
               {
-                user?.id !== id && isPhoneScreen &&
+                user?.id !== author.id && isPhoneScreen &&
               <>
                 {
                   author.is_following ? (
