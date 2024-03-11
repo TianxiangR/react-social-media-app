@@ -12,8 +12,11 @@ import { AugmentedPostPreview, PostMeta } from '@/types';
 
 import Loader from '../../../components/shared/Loader';
 
+export interface ForYouPostsProps {
+  onNewPosts?: (posts: AugmentedPostPreview[] | undefined) => void;
+}
 
-function ForYouPosts() {   
+function ForYouPosts({onNewPosts}: ForYouPostsProps) {   
   const { data, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage, isRefetching, updateInfiniteData, newData } = useGetTopRatedPosts();
   const [fetchNextRef, fetchNextInView] = useInView({rootMargin: '-55px 0px 0px 0px'});
   const [showMoreRef, showMoreIView] = useInView({rootMargin: '-55px 0px 0px 0px'});
@@ -42,6 +45,14 @@ function ForYouPosts() {
     }
   }, [fetchNextInView, isFetchingNextPage, isLoadingPosts, isRefetching]);
 
+  useEffect(() => {
+    if (newPostCount > 0 && !showMoreIView ) {
+      onNewPosts?.(newData);
+    }
+    else {
+      onNewPosts?.(undefined);
+    }
+  }, [newData, newPostCount, showMoreIView]);
 
   const preprocessPosts = (posts: AugmentedPostPreview[]): Array<PostMeta[]> => {
     const map: Map<string, ListNode> = new Map();
@@ -160,17 +171,6 @@ function ForYouPosts() {
 
   return (
     <ul className="flex flex-col w-full h-full post-list relative">
-      {
-        <Slide in={newPostCount > 0 && !showMoreIView} style={{zIndex: 10}} direction='down'>
-          <div className="sticky top-[70px] z-10 w-full h-0">
-            <div className="relative w-full">
-              <div className="absolute w-full flex justify-center items-center">
-                <NewPostIndicator posts={newData ?? []} />
-              </div>
-            </div>
-          </div>
-        </Slide>
-      }
       {
         !isPhoneScreen &&
         <li className="">

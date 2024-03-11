@@ -11,24 +11,19 @@ function NewPostIndicator({posts}: NewPostIndicatorProps) {
   const getDistictUsers = (posts: IPostPreview[]): User[] => {
     const seen = new Set();
     const users = posts.map(post => post.author);
-
-    for (const user of users) {
-      if (!seen.has(user.id)) {
-        seen.add(user.id);
-      }
-
-      if (seen.size === 3) {
-        break;
-      }
-    }
-
-    return users.filter(user => seen.has(user.id));
+    return users.filter(user => {
+      const duplicate = seen.has(user.id);
+      seen.add(user.id);
+      return !duplicate;
+    });
   };
   const users = getDistictUsers(posts);
   const handleClick = () => {
     window.scrollTo({top: 0, behavior: 'smooth'});
   };
 
+  console.log(posts);
+  console.log('users',users);
   return (
     <div className='bg-blue px-3 py-1 rounded-full text-white flex hover:cursor-pointer hover:bg-blue-100 select-none justify-center items-center' onClick={handleClick}>
       <ArrowUpwardIcon sx={{fontSize: '24px'}} />

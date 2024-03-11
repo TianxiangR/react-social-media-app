@@ -6,6 +6,7 @@ import ListNode from '@/classes/ListNode';
 import CreatePostForm from '@/components/shared/CreatePostForm';
 import NewPostIndicator from '@/components/shared/NewPostIndicator';
 import PostPreview from '@/components/shared/PostPreview';
+import useHideOnScroll from '@/hooks/useHideOnScroll';
 import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import { useGetFollowingPosts } from '@/react-query/queriesAndMutations';
 import { AugmentedPostPreview, IPostPreview, PostMeta } from '@/types';
@@ -13,174 +14,17 @@ import { AugmentedPostPreview, IPostPreview, PostMeta } from '@/types';
 import Loader from '../../../components/shared/Loader';
 
 
-const mockData = [
-  {
-    'id': '3059f7fe-84e6-45b7-aeb9-cc8ddd242be7',
-    'author': {
-      'id': '0ec00ed2-9c17-46ce-b2a7-a5f8ea23fa81',
-      'username': 'Tian',
-      'email': 'tian@tiantian.com',
-      'name': 'Tian',
-      'date_of_birth': '2000-06-29',
-      'created_at': '2024-02-24T11:54:09.588061Z',
-      'profile_image': 'http://localhost:8000/media/profile_images/header_photo.png',
-      'bio': '',
-      'location': '',
-      'followers': 1,
-      'following': 1,
-      'website': '',
-      'header_photo': null,
-      'is_following': true
-    },
-    'content': '6',
-    'created_at': '2024-03-10T12:26:38.584874Z',
-    'images': [],
-    'liked': false,
-    'reply_count': 0,
-    'repost_count': 0,
-    'like_count': 0,
-    'view_count': 0,
-    'bookmark_count': 0,
-    'bookmarked': false,
-    'reposted': false,
-    'repost_parent': null,
-    'reply_parent': null
-  },
-  {
-    'id': '3059f7fe-84e6-45b7-aeb9-cc8ddd242be8',
-    'author': {
-      'id': '0ec00ed2-9c17-46ce-b2a7-a5f8ea23fa82',
-      'username': 'Tian',
-      'email': 'tian@tiantian.com',
-      'name': 'Tian',
-      'date_of_birth': '2000-06-29',
-      'created_at': '2024-02-24T11:54:09.588061Z',
-      'profile_image': 'http://localhost:8000/media/profile_images/header_photo.png',
-      'bio': '',
-      'location': '',
-      'followers': 1,
-      'following': 1,
-      'website': '',
-      'header_photo': null,
-      'is_following': true
-    },
-    'content': '6',
-    'created_at': '2024-03-10T12:26:38.584874Z',
-    'images': [],
-    'liked': false,
-    'reply_count': 0,
-    'repost_count': 0,
-    'like_count': 0,
-    'view_count': 0,
-    'bookmark_count': 0,
-    'bookmarked': false,
-    'reposted': false,
-    'repost_parent': null,
-    'reply_parent': null
-  },
-  {
-    'id': '3059f7fe-84e6-45b7-aeb9-cc8ddd242be9',
-    'author': {
-      'id': '0ec00ed2-9c17-46ce-b2a7-a5f8ea23fa83',
-      'username': 'Tian',
-      'email': 'tian@tiantian.com',
-      'name': 'Tian',
-      'date_of_birth': '2000-06-29',
-      'created_at': '2024-02-24T11:54:09.588061Z',
-      'profile_image': 'http://localhost:8000/media/profile_images/header_photo.png',
-      'bio': '',
-      'location': '',
-      'followers': 1,
-      'following': 1,
-      'website': '',
-      'header_photo': null,
-      'is_following': true
-    },
-    'content': '6',
-    'created_at': '2024-03-10T12:26:38.584874Z',
-    'images': [],
-    'liked': false,
-    'reply_count': 0,
-    'repost_count': 0,
-    'like_count': 0,
-    'view_count': 0,
-    'bookmark_count': 0,
-    'bookmarked': false,
-    'reposted': false,
-    'repost_parent': null,
-    'reply_parent': null
-  },
-  {
-    'id': '3059f7fe-84e6-45b7-aeb9-cc8ddd242be1',
-    'author': {
-      'id': '0ec00ed2-9c17-46ce-b2a7-a5f8ea23fa84',
-      'username': 'Tian',
-      'email': 'tian@tiantian.com',
-      'name': 'Tian',
-      'date_of_birth': '2000-06-29',
-      'created_at': '2024-02-24T11:54:09.588061Z',
-      'profile_image': 'http://localhost:8000/media/profile_images/profile_QFY5cbb.png',
-      'bio': '',
-      'location': '',
-      'followers': 1,
-      'following': 1,
-      'website': '',
-      'header_photo': null,
-      'is_following': true
-    },
-    'content': '6',
-    'created_at': '2024-03-10T12:26:38.584874Z',
-    'images': [],
-    'liked': false,
-    'reply_count': 0,
-    'repost_count': 0,
-    'like_count': 0,
-    'view_count': 0,
-    'bookmark_count': 0,
-    'bookmarked': false,
-    'reposted': false,
-    'repost_parent': null,
-    'reply_parent': null
-  },
-  {
-    'id': '3059f7fe-84e6-45b7-aeb9-cc8ddd242be2',
-    'author': {
-      'id': '0ec00ed2-9c17-46ce-b2a7-a5f8ea23fa85',
-      'username': 'Tian',
-      'email': 'tian@tiantian.com',
-      'name': 'Tian',
-      'date_of_birth': '2000-06-29',
-      'created_at': '2024-02-24T11:54:09.588061Z',
-      'profile_image': 'http://localhost:8000/media/profile_images/profile_QFY5cbb.png',
-      'bio': '',
-      'location': '',
-      'followers': 1,
-      'following': 1,
-      'website': '',
-      'header_photo': null,
-      'is_following': true
-    },
-    'content': '6',
-    'created_at': '2024-03-10T12:26:38.584874Z',
-    'images': [],
-    'liked': false,
-    'reply_count': 0,
-    'repost_count': 0,
-    'like_count': 0,
-    'view_count': 0,
-    'bookmark_count': 0,
-    'bookmarked': false,
-    'reposted': false,
-    'repost_parent': null,
-    'reply_parent': null
-  },
-] as IPostPreview[];
+export interface FollowingPostsProps {
+  onNewPosts?: (posts: AugmentedPostPreview[] | undefined) => void;
+}
 
-function FollowingPosts() {
+function FollowingPosts({onNewPosts}: FollowingPostsProps) {
   const { data, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage, isRefetching, newData, updateInfiniteData} = useGetFollowingPosts();
-  const [fetchNextRef, fetchNextInView] = useInView({rootMargin: '-55px 0px 0px 0px'});
-  const [showMoreRef, showMoreIView] = useInView({rootMargin: '-55px 0px 0px 0px'});
   const isPhoneScreen = useIsPhoneScreen();
+  const [fetchNextRef, fetchNextInView] = useInView({rootMargin: `-${isPhoneScreen ? 108 : 55}px 0px 0px 0px`});
+  const [showMoreRef, showMoreIView] = useInView({rootMargin: `-${isPhoneScreen ? 108 : 55}px 0px 0px 0px`});
+  const newPostIndicatorRef = useRef<HTMLDivElement>(null);
+  useHideOnScroll(isPhoneScreen ? newPostIndicatorRef : undefined);
   const getNewPostCount = () => {
     const seen = new Set();
 
@@ -203,6 +47,15 @@ function FollowingPosts() {
       fetchNextPage();
     }
   }, [fetchNextInView, isFetchingNextPage, isLoadingPosts, isRefetching]);
+
+  useEffect(() => {
+    if (newPostCount > 0 && !showMoreIView ) {
+      onNewPosts?.(newData);
+    }
+    else {
+      onNewPosts?.(undefined);
+    }
+  }, [newData, newPostCount, showMoreIView]);
 
 
   const preprocessPosts = (posts: AugmentedPostPreview[]): Array<PostMeta[]> => {
@@ -321,17 +174,6 @@ function FollowingPosts() {
 
   return (
     <ul className="flex flex-col w-full h-full post-list relative">
-      {
-        <Slide in={newPostCount > 0 && !showMoreIView} style={{zIndex: 10}} direction='down'>
-          <div className="sticky top-[70px] z-10 w-full h-0">
-            <div className="relative w-full">
-              <div className="absolute w-full flex justify-center items-center">
-                <NewPostIndicator posts={newData ?? []} />
-              </div>
-            </div>
-          </div>
-        </Slide>
-      }
       {
         !isPhoneScreen &&
         <li className="">

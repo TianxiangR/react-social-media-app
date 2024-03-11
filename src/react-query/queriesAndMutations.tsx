@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { addBookmarkByPostId, createPost, createUser, deletePostById, followingPostsRangeQuery,followUser, getBookmarkedPosts,  getCurrentUser, getFollowingPosts, getNotificationPrefetch as getUnreadNotificationCount, getNotifications, getPostById, getPosts, getRepliesById, getTopRatedPosts, getUserFollowers, getUserFollowing, likePost, markNotificationAsRead, queryLikesByUsername, queryMediaByUsername, queryPostsByUsername, queryUserByUsername, removeBookmarkByPostId, replyPostById, repostPostById, searchLatest, searchMedia, searchPeople, searchTop, signInUser, topRatedPostsRangeQuery,unfollowUser, unlikePost, updateProfile } from '@/apis';
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { useSnackbarContext } from '@/context/SnackbarContext';
-import { AugmentedPostPreview, IPostPreview, NewPost, Notification,Page, PrefetchResult, User, UserProfile } from '@/types';
+import { AugmentedPostPreview, IPostPreview, NewPost, Notification,Page, PrefetchResult, RangeQueryResult, User, UserProfile } from '@/types';
 
 import { QUERY_KEYS } from './queryKeys';
 
@@ -951,12 +951,39 @@ export function useGetUnreadNotificationsCount(){
 }
 
 export function useGetTopRatedPosts() {
-  const initialTimeStamp = Math.floor(Date.now() / 1000);
+  const queryClient = useQueryClient();
+  const getInitialTimeStamp = () => {
+    const queryData: InfiniteData<Page<AugmentedPostPreview>> |undefined = queryClient.getQueryData([QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS]);
+    if (queryData) {
+      let maxTimeStamp = Math.floor(new Date(queryData.pages[0].results[0].created_at).getTime() / 1000);
+      queryData.pages.forEach((page) => {
+        page.results.forEach((post) => {
+          const currentTimestamp = Math.floor(new Date(post.created_at).getTime() / 1000);
+          if (currentTimestamp > maxTimeStamp) {
+            maxTimeStamp = currentTimestamp;
+          }
+        });
+      });
+
+      return maxTimeStamp;
+    }
+
+    return Math.floor(Date.now() / 1000);
+  };
+  const getCachedNewData = () => {
+    const cachedData: RangeQueryResult<IPostPreview> | undefined = queryClient.getQueryData([QUERY_KEYS.TOP_RATED_POSTS_RANGE]);
+    if (cachedData) {
+      return cachedData.results;
+    }
+
+    return undefined;
+  };
+  const initialTimeStamp = getInitialTimeStamp();
   const cursorTimeStamp = useRef(initialTimeStamp);
   const lowerTimeStamp = useRef(initialTimeStamp);
   const upperTimeStamp = useRef(initialTimeStamp);
-  const queryClient = useQueryClient();
-  const [newData, setNewData] = useState<IPostPreview[] | undefined>(undefined);
+
+  const [newData, setNewData] = useState<IPostPreview[] | undefined>(getCachedNewData());
   const queryKey = [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS];
   const infiniteQueryResult = useInfiniteQuery<Page<IPostPreview>, Error, InfiniteData<Page<IPostPreview>>, QueryKey, number>({
     queryKey,
@@ -1043,12 +1070,39 @@ export function useGetTopRatedPosts() {
 }
 
 export function useGetFollowingPosts() {
-  const initialTimeStamp = Math.floor(Date.now() / 1000);
+  const queryClient = useQueryClient();
+  const getInitialTimeStamp = () => {
+    const queryData: InfiniteData<Page<AugmentedPostPreview>> |undefined = queryClient.getQueryData([QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_FOLLOWING_POSTS]);
+    if (queryData) {
+      let maxTimeStamp = Math.floor(new Date(queryData.pages[0].results[0].created_at).getTime() / 1000);
+      queryData.pages.forEach((page) => {
+        page.results.forEach((post) => {
+          const currentTimestamp = Math.floor(new Date(post.created_at).getTime() / 1000);
+          if (currentTimestamp > maxTimeStamp) {
+            maxTimeStamp = currentTimestamp;
+          }
+        });
+      });
+
+      return maxTimeStamp;
+    }
+
+    return Math.floor(Date.now() / 1000);
+  };
+
+  const getCachedNewData = () => {
+    const cachedData: RangeQueryResult<IPostPreview> | undefined = queryClient.getQueryData([QUERY_KEYS.FOLLOWING_POSTS_RANGE]);
+    if (cachedData) {
+      return cachedData.results;
+    }
+
+    return undefined;
+  };
+  const initialTimeStamp = getInitialTimeStamp();
   const lowerTimeStamp = useRef(initialTimeStamp);
   const upperTimeStamp = useRef(initialTimeStamp);
   const cursorTimeStamp = useRef(initialTimeStamp);
-  const queryClient = useQueryClient();
-  const [newData, setNewData] = useState<IPostPreview[] | undefined>(undefined);
+  const [newData, setNewData] = useState<IPostPreview[] | undefined>(getCachedNewData());
   const infiniteQueryResult =  useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_FOLLOWING_POSTS],
     queryFn: ({pageParam}) => {
