@@ -1,8 +1,10 @@
+import { Slide } from '@mui/material';
 import React, { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
 import ListNode from '@/classes/ListNode';
 import CreatePostForm from '@/components/shared/CreatePostForm';
+import NewPostIndicator from '@/components/shared/NewPostIndicator';
 import PostPreview from '@/components/shared/PostPreview';
 import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import { useGetTopRatedPosts } from '@/react-query/queriesAndMutations';
@@ -12,15 +14,34 @@ import Loader from '../../../components/shared/Loader';
 
 
 function ForYouPosts() {   
-  const { data, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = useGetTopRatedPosts();
-  const [ref, inView] = useInView();
+  const { data, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage, isRefetching, updateInfiniteData, newData } = useGetTopRatedPosts();
+  const [fetchNextRef, fetchNextInView] = useInView({rootMargin: '-55px 0px 0px 0px'});
+  const [showMoreRef, showMoreIView] = useInView({rootMargin: '-55px 0px 0px 0px'});
   const isPhoneScreen = useIsPhoneScreen();
 
+  const getNewPostCount = () => {
+    const seen = new Set();
+
+    data?.pages[0].results.forEach((post) => {
+      seen.add(post.id);
+    });
+
+    return newData?.reduce((acc, post) => {
+      if (!seen.has(post.id)) {
+        acc++;
+      }
+      return acc;
+    }, 0) || 0;
+  };
+
+  const newPostCount = getNewPostCount();
+
   useEffect(() => {
-    if (inView) {
+    if (fetchNextInView && !isFetchingNextPage && !isLoadingPosts && !isRefetching) {
       fetchNextPage();
     }
-  }, [inView]);
+  }, [fetchNextInView, isFetchingNextPage, isLoadingPosts, isRefetching]);
+
 
   const preprocessPosts = (posts: AugmentedPostPreview[]): Array<PostMeta[]> => {
     const map: Map<string, ListNode> = new Map();
@@ -116,7 +137,7 @@ function ForYouPosts() {
 
                   if (i === actualLength - 5) {
                     return (
-                      <li key={i} ref={ref}>
+                      <li key={i} ref={fetchNextRef}>
                         <PostPreview post={postMeta.post} variant={postMeta.variant} />
                       </li>
                     );
@@ -138,11 +159,32 @@ function ForYouPosts() {
   };
 
   return (
-    <ul className="flex flex-col w-full h-full post-list">
+    <ul className="flex flex-col w-full h-full post-list relative">
+      {
+        <Slide in={newPostCount > 0 && !showMoreIView} style={{zIndex: 10}} direction='down'>
+          <div className="sticky top-[70px] z-10 w-full h-0">
+            <div className="relative w-full">
+              <div className="absolute w-full flex justify-center items-center">
+                <NewPostIndicator posts={newData ?? []} />
+              </div>
+            </div>
+          </div>
+        </Slide>
+      }
       {
         !isPhoneScreen &&
         <li className="">
           <CreatePostForm />
+        </li>
+      }
+      {
+        newPostCount > 0 &&
+        <li 
+          className="w-full flex justify-center items-center text-blue py-3 hover:cursor-pointer hover:bg-[#f7f7f7]"
+          onClick={() => updateInfiniteData()}
+          ref={showMoreRef}
+        >
+          Show {newPostCount} post{newPostCount > 1 ? 's' : ''}
         </li>
       }
       {

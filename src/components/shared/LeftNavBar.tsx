@@ -15,7 +15,7 @@ import { routeConfig } from '@/configs';
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
-import { useGetNotifications } from '@/react-query/queriesAndMutations';
+import { useGetUnreadNotificationsCount } from '@/react-query/queriesAndMutations';
 
 import { Button } from '../ui/button';
 import PostDialogContent from './CreatePostDialogContent';
@@ -25,8 +25,8 @@ function LeftNavBar() {
   const { openDialog } = useGlobalContext().dialog;
   const {user} = useUserContext();
   const navigate = useNavigate();
-  const { data } = useGetNotifications();
-  const unread_count = data?.filter((notification) => !notification.read).length || 0;
+  const { data } = useGetUnreadNotificationsCount();
+  const unread_count = data?.count || 0;
 
   const logout = () => {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
