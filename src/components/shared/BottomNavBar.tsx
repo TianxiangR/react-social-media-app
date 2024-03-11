@@ -6,6 +6,7 @@ import { Link, useLocation, useParams} from 'react-router-dom';
 import { routeConfig } from '@/configs';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
+import useFadeOnScroll from '@/hooks/useFadeOnScroll';
 import { useGetNotifications, useGetPostById,useGetUnreadNotificationsCount } from '@/react-query/queriesAndMutations';
 
 import { Button } from '../ui/button';
@@ -37,9 +38,11 @@ function BottomNavBar() {
   const { data } = useGetUnreadNotificationsCount();
   const unread_count = data?.count || 0;
   const isPostPath = location.pathname.includes('/status');
+  const ref = React.useRef<HTMLDivElement>(null);
+  useFadeOnScroll(ref);
 
   return (
-    <div className='min-h-14 bg-white w-full px-4 flex relative'>
+    <div className='min-h-14 bg-white w-full px-4 flex relative' ref={ref}>
       { !isPostPath ?
         <button
           onClick={() => openDialog(() => <PostDialogContent variant="create" />)} 
