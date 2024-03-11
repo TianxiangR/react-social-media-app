@@ -89,7 +89,7 @@
   }
 
   .full-screen {
-    @apply max-w-[100vw] max-h-screen w-screen h-screen;
+    @apply max-w-[100vw] max-h-[100vh] w-screen h-screen;
   }
 
   .dialog {
@@ -155,7 +155,7 @@
   }
 
   .sticky-bar {
-    background-color: rgba(255, 255, 255, 0.9);
+    background-color: rgba(255, 255, 255, 0.6);
     @apply sticky backdrop-blur-md;
   }
 

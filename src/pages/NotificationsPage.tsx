@@ -12,16 +12,21 @@ import { useGlobalContext } from '@/context/GlobalContext';
 import useHideOnScroll from '@/hooks/useHideOnScroll';
 import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import { useGetNotifications, useMarkNotificationAsRead } from '@/react-query/queriesAndMutations';
+import { Notification } from '@/types';
 
 function NotificationsPage() {
   const [currentTab, setCurrentTab] = useState('all');
-  const {data: notifications, isPending, isError, refetch} = useGetNotifications();
+  const {data, isPending, isError, isFetchingNextPage, fetchNextPage} = useGetNotifications();
   const {user} = useUserContext();
   const {openDrawer} = useGlobalContext().drawer;
   const shouldHide = useIsPhoneScreen();
   const ref = useRef(null);
   const { mutateAsync: markAsRead } = useMarkNotificationAsRead();
   useHideOnScroll(shouldHide ? ref : undefined);
+
+  const inViewMarkAsRead = (notification: Notification, id: string) => {
+    if (notification.read === false) markAsRead(id);
+  };
 
   const renderNotifications = () => {
     if (isPending) {
@@ -34,38 +39,55 @@ function NotificationsPage() {
           <h2 className="text-xl font-bold">Error fetching notifications</h2>
         </div>
       );
-    } else if (notifications) {
+    } else if (data) {
+      const notifiations = data.pages.map((page) => page.results).flat();
       return (
         <ul className="post-list">
-          {notifications.map((notification) => {
+          {notifiations.map((notification, index) => { 
+            let notificationComponent = <></>;
+
             if (notification.type === 'repost' || notification.type === 'reply') {
-              return (
-                <li key={notification.id}>
-                  <InViewContainer once onInview={() => {if (notification.read === false) markAsRead(notification.id);}}>
-                    <PostPreview post={notification.data} />
-                  </InViewContainer>
-                </li>
+              notificationComponent = (
+                <InViewContainer once onInview={() => inViewMarkAsRead(notification, notification.id)}>
+                  <PostPreview post={notification.data} />
+                </InViewContainer>
               );
             }
             else if (notification.type === 'like') {
-              return (
-                <li key={notification.id}>
-                  <InViewContainer once onInview={() => {if (notification.read === false) markAsRead(notification.id);}}>
-                    <LikePreview {...notification.data} />
-                  </InViewContainer>
-                </li>
+              notificationComponent = (
+                <InViewContainer once onInview={() => inViewMarkAsRead(notification, notification.id)}>
+                  <LikePreview {...notification.data} />
+                </InViewContainer>
               );
             }
             else if (notification.type === 'follow') {
-              return (
-                <li key={notification.id}>
-                  <InViewContainer once onInview={() => {if (notification.read === false) markAsRead(notification.id);}}>
-                    <FollowPreview {...notification.data} />
-                  </InViewContainer>
-                </li>
+              notificationComponent = (
+                <InViewContainer once onInview={() => inViewMarkAsRead(notification, notification.id)}>
+                  <FollowPreview {...notification.data} />
+                </InViewContainer>
               );
             }
+
+            if (index === notifiations.length - 5) {
+              notificationComponent = (
+                <InViewContainer onInview={fetchNextPage}>
+                  {notificationComponent}
+                </InViewContainer>
+              );
+            }
+
+            return (
+              <li key={notification.id} className="w-full">
+                {notificationComponent}
+              </li>
+            );
           })}
+          {
+            isFetchingNextPage && 
+            <li>
+              <Loader />
+            </li>
+          }
         </ul>
       );
     }
@@ -75,7 +97,7 @@ function NotificationsPage() {
     <TabContext value={currentTab}>
       <div className='flex flex-col w-full'>
         <div className='sticky-bar flex-col flex' ref={ref}>
-          <div className="flex flex-row justify-start px-4 py-2 gap-4 items-center h-12">
+          <div className="flex flex-row justify-start p-4 gap-4 items-center h-12">
             <img src={user?.profile_image} alt="avatar" className="size-8 rounded-full inline-block md:hidden" onClick={openDrawer}/>
             <h2 className="text-xl font-bold">Notifications</h2>
           </div>

@@ -17,14 +17,23 @@ export interface UserPostsProps {
 
 function UserPosts({ username }: UserPostsProps) {
   const { data, isPending: isLoadingPosts, isError, fetchNextPage, isFetchingNextPage } = useGetUserPosts(username);
+  const [shouldFetchNextPage, setShouldFetchNextPage] = React.useState(false);
   const { ref, inView } = useInView();
   const {user} = useUserContext();
 
   useEffect(() => {
-    if (inView) {
-      fetchNextPage();
+    if (inView && !isFetchingNextPage) {
+      setShouldFetchNextPage(true);
     }
-  }, [inView]);
+  }, [inView, isFetchingNextPage]);
+
+  useEffect(() => {
+    if (shouldFetchNextPage && !isFetchingNextPage) {
+      fetchNextPage().then(() => {
+        setShouldFetchNextPage(false);
+      });
+    }
+  }, [shouldFetchNextPage, fetchNextPage, isFetchingNextPage]);
 
   const preprocessPosts = (posts: AugmentedPostPreview[]): Array<PostMeta[]> => {
     if (!user) return [];

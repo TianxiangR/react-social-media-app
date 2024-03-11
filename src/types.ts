@@ -22,12 +22,12 @@ export type User = {
   email: string;
   date_of_birth: string;
   created_at: string;
-  bio: string;
+  bio: string | null;
   followers: number;
   following: number;
-  location: string;
-  header_photo: string;
-  website: string;
+  location: string | null;
+  header_photo: string | null;
+  website: string | null;
   is_following: boolean;
 } & UserPreview;
 
@@ -163,4 +163,14 @@ export type Page<T> = {
 export type PostMeta = {
   post: AugmentedPostPreview;
   variant: 'normal' | 'top' | 'middle' | 'bottom';
+}
+
+export type PrefetchResult = {
+  count: number;
+}
+
+export type RangeQueryResult<T> = {
+  from: number;
+  to: number;
+  results: T[];
 }

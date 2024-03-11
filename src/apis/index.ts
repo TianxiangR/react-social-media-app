@@ -2,7 +2,7 @@ import axios, { Axios, AxiosProgressEvent } from 'axios';
 
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { getFormDataFromObject, getQueryStringFromObject } from '@/lib/utils';
-import { AugmentedPostPreview, NewPost, NewUser, Notification, Page, TokenResponse, User, UserProfile } from '@/types';
+import { AugmentedPostPreview, IPostPreview, NewPost, NewUser, Notification, Page, PrefetchResult, RangeQueryResult, TokenResponse, User, UserProfile } from '@/types';
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
@@ -509,9 +509,32 @@ export async function getBookmarkedPosts(timestamp: number, page: number): Promi
   return data;
 }
 
-export async function getNotifications(): Promise<Notification[]> {
+export async function getNotifications(timestamp: number, page: number): Promise<Page<Notification>> {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
-  const response = await fetch(`${baseUrl}/api/notifications/`, {
+  const queryParams = new URLSearchParams({
+    timestamp: timestamp.toString(),
+    page: page.toString(),
+  });
+  const response = await fetch(`${baseUrl}/api/notifications/?${queryParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data = await response.json();
+  return data;
+}
+
+export async function getNotificationPrefetch(): Promise<PrefetchResult> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const queryParams = new URLSearchParams({
+    prefetch: 'true',
+  });
+  const response = await fetch(`${baseUrl}/api/notifications/?${queryParams.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -628,4 +651,57 @@ export async function markNotificationAsRead(notificationId: string): Promise<No
 
   const data = await response.json();
   return data;
+}
+
+
+export async function followingPostsRangeQuery(from: number, to: number): Promise<RangeQueryResult<IPostPreview>> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const searchParams = new URLSearchParams({
+    from: from.toString(),
+    to: to.toString(),
+  });
+
+  const response = await fetch(`${baseUrl}/api/following-posts-range/?${searchParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data: IPostPreview[] = await response.json();
+
+  return {
+    results: data,
+    from,
+    to,
+  };
+}
+
+export async function topRatedPostsRangeQuery(from: number, to: number): Promise<RangeQueryResult<IPostPreview>> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+  const searchParams = new URLSearchParams({
+    from: from.toString(),
+    to: to.toString(),
+  });
+
+  const response = await fetch(`${baseUrl}/api/top-rated-range/?${searchParams.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+
+  const data: IPostPreview[] = await response.json();
+
+  return {
+    results: data,
+    from,
+    to,
+  };
 }

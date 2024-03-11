@@ -1,14 +1,14 @@
 import { Alert, Slide, type SlideProps } from '@mui/material';
 import { InfiniteData,  QueryClient,  QueryKey, useInfiniteQuery,useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Axios, AxiosProgressEvent } from 'axios';
-import { cloneDeep, update } from 'lodash';
-import React from 'react';
+import { AxiosProgressEvent } from 'axios';
+import { cloneDeep, initial } from 'lodash';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
-import { addBookmarkByPostId, createPost, createUser, deletePostById, followUser, getBookmarkedPosts,  getCurrentUser, getFollowingPosts, getNotifications, getPostById, getPosts, getRepliesById, getTopRatedPosts, getUserFollowers, getUserFollowing, likePost, markNotificationAsRead, queryLikesByUsername, queryMediaByUsername, queryPostsByUsername, queryUserByUsername, removeBookmarkByPostId, replyPostById, repostPostById, searchLatest, searchMedia, searchPeople, searchTop, signInUser, unfollowUser, unlikePost, updateProfile } from '@/apis';
+import { addBookmarkByPostId, createPost, createUser, deletePostById, followingPostsRangeQuery,followUser, getBookmarkedPosts,  getCurrentUser, getFollowingPosts, getNotificationPrefetch as getUnreadNotificationCount, getNotifications, getPostById, getPosts, getRepliesById, getTopRatedPosts, getUserFollowers, getUserFollowing, likePost, markNotificationAsRead, queryLikesByUsername, queryMediaByUsername, queryPostsByUsername, queryUserByUsername, removeBookmarkByPostId, replyPostById, repostPostById, searchLatest, searchMedia, searchPeople, searchTop, signInUser, topRatedPostsRangeQuery,unfollowUser, unlikePost, updateProfile } from '@/apis';
 import { TOKEN_STORAGE_KEY } from '@/constants';
 import { useSnackbarContext } from '@/context/SnackbarContext';
-import { AugmentedPostPreview, IPost, IPostPreview, NewPost, Notification,Page, User, UserProfile } from '@/types';
+import { AugmentedPostPreview, IPostPreview, NewPost, Notification,Page, PrefetchResult, User, UserProfile } from '@/types';
 
 import { QUERY_KEYS } from './queryKeys';
 
@@ -30,11 +30,6 @@ function getNewPostList(oldData: InfiniteData<Page<AugmentedPostPreview>> | unde
 }
 
 function addPostToList(queryClient: QueryClient, data: IPostPreview) {
-  // queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_RECENT_POSTS] });
-  // queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS] });
-  // queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS, data.author.username] });
-  // queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_POST_REPLIES_BY_ID, data.reply_parent?.id]});
-
   queryClient.setQueriesData({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_FOLLOWING_POSTS],
   }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => getNewPostList(oldData, data));
@@ -47,18 +42,9 @@ function addPostToList(queryClient: QueryClient, data: IPostPreview) {
   queryClient.setQueriesData({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_POST_REPLIES_BY_ID, data.reply_parent?.id],
   }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => getNewPostList(oldData, data));
-
-
-  // queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_RECENT_POSTS]});
-  // queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS]});
-  // queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS, data.author.username]});
-  // queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_POST_REPLIES_BY_ID, data.reply_parent?.id]});
 }
 
 function removePostFromList(queryClient: QueryClient, postId: string) {
-  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST] });
-  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_POST_BY_ID, postId] });
-  
   queryClient.setQueriesData({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST],
   }, (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined) => {
@@ -95,10 +81,6 @@ function removePostFromList(queryClient: QueryClient, postId: string) {
 
     return newData;
   });
-
-
-  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST]});
-  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_POST_BY_ID, postId]});
 }
 
 /**
@@ -121,9 +103,6 @@ function copyAttributes<T>(receiver: T, source: Partial<T>, attributes: Array<ke
 }
 
 function updatePostList(queryClient: QueryClient, data: IPostPreview, attributes: Array<keyof IPostPreview>) {
-  // cancel ongoing queries
-  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.QUERY_POST_LIST] });
-
   // udpate query cache
   queryClient.setQueriesData(
     {
@@ -167,9 +146,6 @@ function updatePostList(queryClient: QueryClient, data: IPostPreview, attributes
 
       return newData;
     });
-
-  // invalidate queries to trigger refetch
-  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.QUERY_POST_LIST]});
 }
 
 function updatePostById(queryClient: QueryClient, data: IPostPreview, attributes: Array<keyof IPostPreview>) {
@@ -212,8 +188,6 @@ function updatePostById(queryClient: QueryClient, data: IPostPreview, attributes
 }
 
 function updateNotificationList(queryClient: QueryClient, data: IPostPreview, attributes: Array<keyof IPostPreview>) {
-  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_NOTIFICATIONS] });
-
   queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
     if (!oldData) return;
 
@@ -246,8 +220,6 @@ function updateNotificationList(queryClient: QueryClient, data: IPostPreview, at
       return notification;
     });
   });
-
-  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_NOTIFICATIONS]});
 }
 
 function updatePost(queryClient: QueryClient, data: IPostPreview, attributes: Array<keyof IPostPreview>) {
@@ -257,13 +229,12 @@ function updatePost(queryClient: QueryClient, data: IPostPreview, attributes: Ar
 }
 
 function updatePeople(queryClient: QueryClient, data: User, attributes: Array<keyof User>) {
-  queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_PEOPLE_LIST] });
   queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_USER_PROFILE, data.username] });
   queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_CURRENT_USER] });
 
   queryClient.setQueriesData(
     {
-      queryKey: [QUERY_KEYS.SEARCH_PEOPLE],
+      queryKey: [QUERY_KEYS.GET_PEOPLE_LIST],
     },
     (oldData: InfiniteData<Page<User>> | undefined) => {
       if (!oldData) return;
@@ -351,7 +322,7 @@ function updatePeople(queryClient: QueryClient, data: User, attributes: Array<ke
       return newData;
     });
 
-  queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_PEOPLE_LIST]});
+
   queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_USER_PROFILE, data.username]});
   queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_CURRENT_USER]});
   updatePostIds.forEach((id) => {
@@ -525,11 +496,19 @@ export function useDeletePostById (postId: string) {
 }
 
 export function useGetRepliesByPostId(postId: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp, setTimestamp] = useState(Math.floor(Date.now() / 1000));
 
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_POST_REPLIES_BY_ID, postId],
-    queryFn: ({pageParam}) => getRepliesById(postId, pageParam, timestamp),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+        setTimestamp(thisTimeStamp);
+      }
+
+      return getRepliesById(postId, pageParam, thisTimeStamp);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -604,13 +583,20 @@ export function useGetUserProfile(username: string) {
     queryFn: () => queryUserByUsername(username),
     refetchOnWindowFocus: false,
   });
-}
+} 
 
 export function useGetUserPosts(username: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
-  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
+  const [timestamp, setTimestamp] = useState(Math.floor(Date.now() / 1000));
+  const infinityQueryResult =  useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_POSTS, username],
-    queryFn: ({pageParam}) => queryPostsByUsername(username, timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+        setTimestamp(thisTimeStamp);
+      }
+      return queryPostsByUsername(username, thisTimeStamp, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -621,13 +607,23 @@ export function useGetUserPosts(username: string) {
     },
     refetchOnWindowFocus: false,
   });
+
+
+  return infinityQueryResult;
 }
 
 export function useGetUserLikes(username: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_USER_LIKES, username],
-    queryFn: ({pageParam}) => queryLikesByUsername(username, timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return queryLikesByUsername(username, thisTimeStamp, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -641,10 +637,17 @@ export function useGetUserLikes(username: string) {
 }
 
 export function useGetUserMedia(username: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
   return useInfiniteQuery<Page<string>, Error, InfiniteData<Page<string>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.GET_USER_MEDIA, username],
-    queryFn: ({pageParam}) => queryMediaByUsername(username, timestamp, pageParam), 
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return queryMediaByUsername(username, thisTimeStamp, pageParam);
+    }, 
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -744,10 +747,17 @@ export function useUnfollowUser() {
 }
 
 export function useSearchTop(query: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.SEARCH_TOP, query],
-    queryFn: ({pageParam}) => searchTop(query, timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return searchTop(query, thisTimeStamp, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -762,10 +772,17 @@ export function useSearchTop(query: string) {
 }
 
 export function useSearchLatest(query: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.SEARCH_LATEST, query],
-    queryFn: ({pageParam}) => searchLatest(query, timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return searchLatest(query, thisTimeStamp, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -780,10 +797,17 @@ export function useSearchLatest(query: string) {
 }
 
 export function useSearchPeople(query: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
   return useInfiniteQuery<Page<User>, Error, InfiniteData<Page<User>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.GET_PEOPLE_LIST, QUERY_KEYS.SEARCH_PEOPLE, query],
-    queryFn: ({pageParam}) => searchPeople(query, timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return searchPeople(query, thisTimeStamp, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -798,10 +822,17 @@ export function useSearchPeople(query: string) {
 }
 
 export function useSearchMedia(query: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
   return useInfiniteQuery<Page<string>, Error, InfiniteData<Page<string>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.SEARCH_MEDIA, query],
-    queryFn: ({pageParam}) => searchMedia(query, timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return searchMedia(query, thisTimeStamp, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -864,10 +895,17 @@ export function useRemoveBookmark(postId: string) {
 }
 
 export function useGetBookmarkedPosts() {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
   return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_BOOKMARKS],
-    queryFn: ({pageParam}) => getBookmarkedPosts(timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return getBookmarkedPosts(thisTimeStamp, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -880,18 +918,55 @@ export function useGetBookmarkedPosts() {
 }
 
 export function useGetNotifications() {
-  return useQuery({
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
+  return useInfiniteQuery<Page<Notification>, Error, InfiniteData<Page<Notification>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.GET_NOTIFICATIONS],
-    queryFn: getNotifications,
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return getNotifications(thisTimeStamp, pageParam);
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.next) {
+        return lastPage.next || undefined;
+      }
+      return undefined;
+    },
     refetchOnWindowFocus: false,
   });
+}
+
+export function useGetUnreadNotificationsCount(){
+  return useQuery(
+    {
+      queryKey: [QUERY_KEYS.GET_NOTIFICATIONS_COUNT],
+      queryFn: () => getUnreadNotificationCount(),
+      refetchInterval: 60000,
+    }
+  );
 }
 
 export function useGetTopRatedPosts() {
-  const timestamp = Math.floor(Date.now() / 1000);
-  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
-    queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS],
-    queryFn: ({pageParam}) => getTopRatedPosts(timestamp, pageParam),
+  const initialTimeStamp = Math.floor(Date.now() / 1000);
+  const cursorTimeStamp = useRef(initialTimeStamp);
+  const lowerTimeStamp = useRef(initialTimeStamp);
+  const upperTimeStamp = useRef(initialTimeStamp);
+  const queryClient = useQueryClient();
+  const [newData, setNewData] = useState<IPostPreview[] | undefined>(undefined);
+  const queryKey = [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_TOP_RATED_POSTS];
+  const infiniteQueryResult = useInfiniteQuery<Page<IPostPreview>, Error, InfiniteData<Page<IPostPreview>>, QueryKey, number>({
+    queryKey,
+    queryFn: ({pageParam}) => {
+      if (pageParam === 1) {
+        cursorTimeStamp.current = Math.floor(Date.now() / 1000);
+      }
+
+      return getTopRatedPosts(cursorTimeStamp.current, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -900,14 +975,89 @@ export function useGetTopRatedPosts() {
       return undefined;
     },
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
+
+  const rangeQueryResult = useQuery({
+    queryKey: [QUERY_KEYS.TOP_RATED_POSTS_RANGE],
+    queryFn: async () => {
+      const currentUpperTimeStamp = Math.floor(Date.now() / 1000);
+      const response = await topRatedPostsRangeQuery(lowerTimeStamp.current, upperTimeStamp.current);
+      upperTimeStamp.current = currentUpperTimeStamp;
+      return response;
+    },
+    refetchInterval: 20 * 1000,
+  });
+
+  useEffect(() => {
+    if (rangeQueryResult.data 
+      && rangeQueryResult.data?.from === lowerTimeStamp.current 
+      && rangeQueryResult.data?.to === upperTimeStamp.current
+      && !infiniteQueryResult.isPending
+      && !infiniteQueryResult.isRefetching) {
+      
+      setNewData(rangeQueryResult.data.results);
+    }
+  }, [rangeQueryResult.data, infiniteQueryResult.isPending, infiniteQueryResult.isRefetching]);
+
+  const updateInfiniteData = useCallback(() => {
+    if (newData) {
+      queryClient.setQueryData(
+        queryKey,
+        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined): InfiniteData<Page<AugmentedPostPreview>> | undefined => {
+          if (!oldData) return;
+          
+          const newInfiniteData = cloneDeep(oldData);
+          
+          const newFirstPagePosts: IPostPreview[] = [];
+          const seen = new Set();
+
+          newInfiniteData.pages[0].results.forEach((post) => {
+            if (!seen.has(post.id)) {
+              newFirstPagePosts.push(post);
+              seen.add(post.id);
+            }
+          });
+
+          newData.forEach((post) => {
+            if (!seen.has(post.id)) {
+              newFirstPagePosts.push(post);
+              seen.add(post.id);
+            }
+          });
+
+          newInfiniteData.pages[0].results = newFirstPagePosts;
+
+          return newInfiniteData;
+        }
+      );
+
+      lowerTimeStamp.current = upperTimeStamp.current;
+      queryClient.removeQueries({queryKey: [QUERY_KEYS.TOP_RATED_POSTS_RANGE]});
+    }
+  }, [newData, queryClient]);
+
+
+  return {...infiniteQueryResult, newData, updateInfiniteData};
 }
 
 export function useGetFollowingPosts() {
-  const timestamp = Math.floor(Date.now() / 1000);
-  return useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
+  const initialTimeStamp = Math.floor(Date.now() / 1000);
+  const lowerTimeStamp = useRef(initialTimeStamp);
+  const upperTimeStamp = useRef(initialTimeStamp);
+  const cursorTimeStamp = useRef(initialTimeStamp);
+  const queryClient = useQueryClient();
+  const [newData, setNewData] = useState<IPostPreview[] | undefined>(undefined);
+  const infiniteQueryResult =  useInfiniteQuery<Page<AugmentedPostPreview>, Error, InfiniteData<Page<AugmentedPostPreview>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_FOLLOWING_POSTS],
-    queryFn: ({pageParam}) => getFollowingPosts(timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      if (pageParam === 1) {
+        cursorTimeStamp.current = Math.floor(Date.now() / 1000);
+      }
+
+      return getFollowingPosts(cursorTimeStamp.current, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -916,14 +1066,84 @@ export function useGetFollowingPosts() {
       return undefined;
     },
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
+
+  const rangeQueryResult = useQuery({
+    queryKey: [QUERY_KEYS.FOLLOWING_POSTS_RANGE],
+    queryFn: async () => {
+      const currentUpperTimeStamp = Math.floor(Date.now() / 1000);
+      const response = await followingPostsRangeQuery(lowerTimeStamp.current, currentUpperTimeStamp);
+      upperTimeStamp.current = currentUpperTimeStamp;
+      return response;
+    },
+    refetchInterval: 20 * 1000,
+  });
+
+  useEffect(() => {
+    if (rangeQueryResult.data 
+      && rangeQueryResult.data?.from === lowerTimeStamp.current 
+      && rangeQueryResult.data?.to === upperTimeStamp.current
+      && !infiniteQueryResult.isPending
+      && !infiniteQueryResult.isRefetching) {
+      
+      setNewData(rangeQueryResult.data.results);
+    }
+  }, [rangeQueryResult.data, infiniteQueryResult.isPending, infiniteQueryResult.isRefetching]);
+
+  const updateInfiniteData = useCallback(() => {
+    if (newData) {
+      queryClient.setQueryData(
+        [QUERY_KEYS.QUERY_POST_LIST, QUERY_KEYS.GET_FOLLOWING_POSTS],
+        (oldData: InfiniteData<Page<AugmentedPostPreview>> | undefined): InfiniteData<Page<AugmentedPostPreview>> | undefined => {
+          if (!oldData) return;
+          
+          const newInfiniteData = cloneDeep(oldData);
+          
+          const newFirstPagePosts: IPostPreview[] = [];
+          const seen = new Set();
+
+          newInfiniteData.pages[0].results.forEach((post) => {
+            if (!seen.has(post.id)) {
+              newFirstPagePosts.push(post);
+              seen.add(post.id);
+            }
+          });
+
+          newData.forEach((post) => {
+            if (!seen.has(post.id)) {
+              newFirstPagePosts.push(post);
+              seen.add(post.id);
+            }
+          });
+
+          newInfiniteData.pages[0].results = newFirstPagePosts;
+
+          return newInfiniteData;
+        }
+      );
+
+      lowerTimeStamp.current = upperTimeStamp.current;
+      queryClient.removeQueries({queryKey: [QUERY_KEYS.FOLLOWING_POSTS_RANGE]});
+    }
+  }, [newData, queryClient]);
+
+  return {...infiniteQueryResult, newData, updateInfiniteData};
 }
 
 export function useGetUserFollowers(username: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
   return useInfiniteQuery<Page<User>, Error, InfiniteData<Page<User>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.GET_PEOPLE_LIST, QUERY_KEYS.GET_USER_FOLLOWERS, username],
-    queryFn: ({pageParam}) => getUserFollowers(username, timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return getUserFollowers(username, thisTimeStamp, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -936,10 +1156,17 @@ export function useGetUserFollowers(username: string) {
 }
 
 export function useGetUserFollowing(username: string) {
-  const timestamp = Math.floor(Date.now() / 1000);
+  const [timestamp] = useState(Math.floor(Date.now() / 1000));
   return useInfiniteQuery<Page<User>, Error, InfiniteData<Page<User>>, QueryKey, number>({
     queryKey: [QUERY_KEYS.GET_PEOPLE_LIST, QUERY_KEYS.GET_USER_FOLLOWING, username],
-    queryFn: ({pageParam}) => getUserFollowing(username, timestamp, pageParam),
+    queryFn: ({pageParam}) => {
+      let thisTimeStamp = timestamp;
+      if (pageParam === 1) {
+        thisTimeStamp = Math.floor(Date.now() / 1000);
+      }
+
+      return getUserFollowing(username, thisTimeStamp, pageParam);
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.next) {
@@ -956,22 +1183,33 @@ export function useMarkNotificationAsRead() {
   return useMutation({
     mutationFn: markNotificationAsRead,
     onSuccess: (data) => {
-      queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_NOTIFICATIONS] });
-      queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: Notification[] | undefined): Notification[] | undefined => {
+      queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS], (oldData: InfiniteData<Page<Notification>> | undefined): InfiniteData<Page<Notification>> | undefined => {
         if (!oldData) return;
 
-        return oldData.map((notification) => {
-          if (notification.id === data.id) {
-            return {
-              ...notification,
-              read: true,
-            };
-          }
+        const newData = cloneDeep(oldData);
 
-          return notification;
+        newData.pages.map((page) => {
+          page.results = page.results.map((notification) => {
+            if (notification.id === data.id) {
+              notification.read = true;
+            }
+            return notification;
+          });
+          return page;
         });
+
+        return newData;
       });
-      queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_NOTIFICATIONS]});
+
+      queryClient.cancelQueries({ queryKey: [QUERY_KEYS.GET_NOTIFICATIONS_COUNT] });
+      queryClient.setQueryData([QUERY_KEYS.GET_NOTIFICATIONS_COUNT], (oldData: PrefetchResult | undefined): PrefetchResult | undefined => {
+        if (!oldData) return;
+        console.log(oldData);
+        return {
+          count: oldData.count - 1,
+        };
+      });
+      queryClient.invalidateQueries({queryKey: [QUERY_KEYS.GET_NOTIFICATIONS_COUNT]});
     }
   });
 }

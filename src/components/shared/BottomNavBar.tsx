@@ -6,7 +6,7 @@ import { Link, useLocation, useParams} from 'react-router-dom';
 import { routeConfig } from '@/configs';
 import { useUserContext } from '@/context/AuthContext';
 import { useGlobalContext } from '@/context/GlobalContext';
-import { useGetNotifications, useGetPostById } from '@/react-query/queriesAndMutations';
+import { useGetNotifications, useGetPostById,useGetUnreadNotificationsCount } from '@/react-query/queriesAndMutations';
 
 import { Button } from '../ui/button';
 import PostDialogContent from './CreatePostDialogContent';
@@ -20,7 +20,7 @@ function ChatButton() {
     post && 
     <button
       onClick={() => openDialog(() => <PostDialogContent variant="reply" parent_post={post} />)} 
-      className='bg-blue rounded-full size-12 absolute right-3 top-[-0.75rem] text-white'
+      className='bg-blue rounded-full size-12 absolute right-3 top-[-0.75rem] text-white hover:bg-blue-100'
       style={{transform: 'translateY(-100%)'}}
     >
       <ChatBubbleOutlineOutlinedIcon sx={{fontSize: '28px'}} />
@@ -34,8 +34,8 @@ function BottomNavBar() {
   const { openDialog } = useGlobalContext().dialog;
   const location = useLocation();
   const {user} = useUserContext();
-  const { data: notifications } = useGetNotifications();
-  const unread_count = notifications?.filter((notification) => !notification.read).length || 0;
+  const { data } = useGetUnreadNotificationsCount();
+  const unread_count = data?.count || 0;
   const isPostPath = location.pathname.includes('/status');
 
   return (
@@ -43,7 +43,7 @@ function BottomNavBar() {
       { !isPostPath ?
         <button
           onClick={() => openDialog(() => <PostDialogContent variant="create" />)} 
-          className='bg-blue rounded-full size-12 absolute right-3 top-[-0.75rem] text-white'
+          className='bg-blue rounded-full size-12 absolute right-3 top-[-0.75rem] text-white hover:bg-blue-100'
           style={{transform: 'translateY(-100%)'}}
         >
           <CreateOutlinedIcon sx={{fontSize: '28px'}} />
