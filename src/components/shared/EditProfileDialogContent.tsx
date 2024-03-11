@@ -31,7 +31,7 @@ import DatePicker from './DatePicker';
 import FormTextArea from './FormTextArea';
 
 function HeaderPhotoFormItem({ header_photo, field }:  {
-  header_photo?: string;
+  header_photo: string | null | undefined;
   field: ControllerRenderProps<z.infer<typeof formSchema>, 'header_photo'>;
 }) {
   const headerImageInputRef = useRef<HTMLInputElement>(null);
