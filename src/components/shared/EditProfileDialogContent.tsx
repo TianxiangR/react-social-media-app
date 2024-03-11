@@ -22,13 +22,10 @@ import useIsPhoneScreen from '@/hooks/useIsPhoneScreen';
 import { base64StringtoFile, extractImageFileExtensionFromBase64 } from '@/lib/utils';
 import { useUpdateProfile } from '@/react-query/queriesAndMutations';
 import { User, UserProfile } from '@/types';
-import { editProfileSchema, editProfileSchema as formSchema } from '@/validations';
+import { editProfileSchema as formSchema } from '@/validations';
 
 import { Button } from '../ui/button';
 import CropImageDialogContent from './CropImageDialogContent';
-import CustomDialog from './CustomDialog';
-import DatePicker from './DatePicker';
-import FormTextArea from './FormTextArea';
 
 function HeaderPhotoFormItem({ header_photo, field }:  {
   header_photo: string | null | undefined;
